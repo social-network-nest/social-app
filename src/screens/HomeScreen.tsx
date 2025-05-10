@@ -28,41 +28,36 @@ const DATA = [
 
 const HomeScreen = () => (
   <ScrollView style={styles.container}>
-    <View>
-      <View>
-        <Text>Buscador</Text>
-      </View>
-      <SafeAreaView>
-        <FlatList
-          data={DATA}
-          renderItem={({ item }) => (
-            <View style={styles.card}>
-              <View>
+    <SafeAreaView>
+      <FlatList
+        data={DATA}
+        renderItem={({ item }) => (
+          <View style={styles.card}>
+            <View>
 
-                <Image
-                  style={styles.icon}
-                  source={{
-                    uri: item.image,
-                  }}
-                />
-                <Text style={styles.user}>{ item.user }</Text>
-                <Text style={styles.time}>Just Now</Text>
-              </View>
-              <View>
-                <Text style={styles.description}>{ item.description }</Text>
-                <Image
-                  style={styles.image}
-                  source={{
-                    uri: item.image,
-                  }}
-                />
-              </View>
+              <Image
+                style={styles.icon}
+                source={{
+                  uri: item.image,
+                }}
+              />
+              <Text style={styles.user}>{ item.user }</Text>
+              <Text style={styles.time}>Just Now</Text>
             </View>
-          )}
-          keyExtractor={item => item.id}
-        />
-      </SafeAreaView>
-    </View>
+            <View>
+              <Text style={styles.description}>{ item.description }</Text>
+              <Image
+                style={styles.image}
+                source={{
+                  uri: item.image,
+                }}
+              />
+            </View>
+          </View>
+        )}
+        keyExtractor={item => item.id}
+      />
+    </SafeAreaView>∫
   </ScrollView>
 );
 
@@ -79,6 +74,7 @@ const styles = StyleSheet.create({
   image: {
     width: '100%',
     height: 200,
+    marginBottom: 4,
   },
   card: {
     backgroundColor: 'white',
