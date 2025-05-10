@@ -28,13 +28,11 @@ const DATA = [
 
 const HomeScreen = () => (
   <ScrollView style={styles.container}>
-    <SafeAreaView>
       <FlatList
         data={DATA}
         renderItem={({ item }) => (
           <View style={styles.card}>
             <View>
-
               <Image
                 style={styles.icon}
                 source={{
@@ -57,13 +55,14 @@ const HomeScreen = () => (
         )}
         keyExtractor={item => item.id}
       />
-    </SafeAreaView>∫
   </ScrollView>
 );
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    padding: 0,
+    margin: 0
   },
   item: {
     backgroundColor: '#f9c2ff',
@@ -78,7 +77,7 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: 'white',
-    marginTop: 8,
+    marginBottom: 8,
   },
   icon: {
     width: 30,
