@@ -122,7 +122,7 @@ const styles = StyleSheet.create({
   actions: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    padding: 12,
+    padding: 8,
     paddingLeft: 20,
     paddingRight: 20,
     borderTopWidth: 1,
