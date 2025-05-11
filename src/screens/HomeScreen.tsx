@@ -1,5 +1,6 @@
+import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { FlatList, Image, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { FlatList, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const DATA = [
@@ -50,6 +51,20 @@ const HomeScreen = () => (
                   uri: item.image,
                 }}
               />
+            </View>
+            <View style={styles.actions}>
+              <TouchableOpacity style={styles.actionBtn}>
+                <Ionicons name="heart-outline" size={24} color="black" />
+                <Text style={styles.actionText}>Me gusta</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.actionBtn}>
+                <Ionicons name="chatbubble-outline" size={24} color="black" />
+                <Text style={styles.actionText}>Comentar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.actionBtn}>
+                <Ionicons name="share-social-outline" size={24} color="black" />
+                <Text style={styles.actionText}>Compartir</Text>
+              </TouchableOpacity>
             </View>
           </View>
         )}
@@ -103,6 +118,23 @@ const styles = StyleSheet.create({
     paddingLeft: 8,
     paddingTop: 12,
     paddingBottom: 8,
+  },
+  actions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    padding: 12,
+    paddingLeft: 20,
+    paddingRight: 20,
+    borderTopWidth: 1,
+    borderTopColor: 'gray'
+  },
+  actionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  actionText: {
+    marginLeft: 6,
+    fontSize: 10,
   },
 });
 
