@@ -72,7 +72,7 @@ const styles = StyleSheet.create({
   },
   image: {
     width: '100%',
-    height: 200,
+    height: 400,
     marginBottom: 4,
   },
   card: {
@@ -88,18 +88,18 @@ const styles = StyleSheet.create({
     top: 8,
   },
   user: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: 'bold',
     paddingLeft: 48,
     paddingTop: 12,
   },
   time: {
-    fontSize: 8,
+    fontSize: 10,
     color: 'blue',
     paddingLeft: 48,
   },
   description: {
-    fontSize: 12,
+    fontSize: 14,
     paddingLeft: 8,
     paddingTop: 12,
     paddingBottom: 8,
