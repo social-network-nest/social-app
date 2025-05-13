@@ -39,7 +39,7 @@ export default function App() {
     <NavigationContainer>
       <Stack.Navigator>
         <Stack.Screen
-          name="Main"
+          name="Chat"
           component={MyTabs}
           options={{ headerShown: false }}
         />

@@ -8,18 +8,117 @@ import {
   TouchableOpacity,
 } from 'react-native';
 
-const CHATS = [
+interface Chat {
+  id: string;
+  user: string;
+  lastMessage: string;
+  timestamp: string;
+  avatar: string;
+}
+
+const CHATS: Chat[] = [
   {
     id: '1',
     user: 'Jamie Murcia',
     lastMessage: 'Muy bien, gracias 😊',
     timestamp: '12:45 PM',
-    avatar: 'https://i.pravatar.cc/150?img=1',
+    avatar: 'https://images.unsplash.com/photo-1532274402911-5a369e4c4bb5?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+  },
+  {
+    id: '2',
+    user: 'Carlos Ruiz',
+    lastMessage: 'Gracias por tu ayuda.',
+    timestamp: '11:20 AM',
+    avatar: 'https://randomuser.me/api/portraits/men/0.jpg',
+  },
+  {
+    id: '3',
+    user: 'Lucía Fernández',
+    lastMessage: '¡Hablamos luego!',
+    timestamp: '9:00 AM',
+    avatar: 'https://randomuser.me/api/portraits/women/1.jpg',
+  },
+  {
+    id: '4',
+    user: 'Ana López',
+    lastMessage: '¿Nos vemos mañana?',
+    timestamp: '8:30 AM',
+    avatar: 'https://randomuser.me/api/portraits/women/2.jpg',
+  },
+  {
+    id: '5',
+    user: 'Pedro García',
+    lastMessage: 'Estoy esperando tu respuesta.',
+    timestamp: '7:55 AM',
+    avatar: 'https://randomuser.me/api/portraits/men/2.jpg',
+  },
+  {
+    id: '6',
+    user: 'Miguel Sánchez',
+    lastMessage: 'Ya te mandé la información.',
+    timestamp: '6:40 AM',
+    avatar: 'https://randomuser.me/api/portraits/men/3.jpg',
+  },
+  {
+    id: '7',
+    user: 'Julia Martínez',
+    lastMessage: '¡Buen trabajo! 👏',
+    timestamp: '5:25 AM',
+    avatar: 'https://randomuser.me/api/portraits/women/3.jpg',
+  },
+  {
+    id: '8',
+    user: 'David Rodríguez',
+    lastMessage: 'Vamos a vernos esta tarde.',
+    timestamp: '4:10 AM',
+    avatar: 'https://randomuser.me/api/portraits/men/4.jpg',
+  },
+  {
+    id: '9',
+    user: 'Laura Pérez',
+    lastMessage: '¡Te espero en el café!',
+    timestamp: '3:00 AM',
+    avatar: 'https://randomuser.me/api/portraits/women/4.jpg',
+  },
+  {
+    id: '10',
+    user: 'José Gómez',
+    lastMessage: 'Te llamo más tarde.',
+    timestamp: '2:30 AM',
+    avatar: 'https://randomuser.me/api/portraits/men/5.jpg',
+  },
+  {
+    id: '11',
+    user: 'Raquel Fernández',
+    lastMessage: '¿Cuándo es la reunión?',
+    timestamp: '1:15 AM',
+    avatar: 'https://randomuser.me/api/portraits/women/5.jpg',
+  },
+  {
+    id: '12',
+    user: 'Victor Castillo',
+    lastMessage: 'Estoy fuera de la oficina.',
+    timestamp: '12:00 AM',
+    avatar: 'https://randomuser.me/api/portraits/men/6.jpg',
+  },
+  {
+    id: '13',
+    user: 'Beatriz Ramos',
+    lastMessage: 'Nos vemos el próximo mes.',
+    timestamp: '11:30 PM',
+    avatar: 'https://randomuser.me/api/portraits/women/6.jpg',
+  },
+  {
+    id: '14',
+    user: 'Andrés Ruiz',
+    lastMessage: 'Lo resolví, gracias.',
+    timestamp: '10:45 PM',
+    avatar: 'https://randomuser.me/api/portraits/men/7.jpg',
   },
 ];
 
-const ChatScreen = ({ navigation }: any) => {
-  const renderItem = ({ item }: any) => (
+const ChatScreen = ({ navigation }: { navigation: any }) => {
+  const renderItem = ({ item }: { item: Chat }) => (
     <TouchableOpacity
       style={styles.chatCard}
       onPress={() => navigation.navigate('Message', { user: item.user })}
