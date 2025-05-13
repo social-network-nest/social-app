@@ -1,2 +1,3 @@
 export { default as HomeScreen } from './HomeScreen';
-export { default as MessagesScreen } from './MessageScreen';
+export { default as ChatScreen } from './ChatsScreen';
+export { default as MessageScreen } from './MessageScreen';
