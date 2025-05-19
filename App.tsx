@@ -19,6 +19,7 @@ function MyTabs() {
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="home" size={size} color={color} />
           ),
+          headerShown: false,
         }}
       />
       <Tab.Screen

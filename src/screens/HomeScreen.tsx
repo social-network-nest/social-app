@@ -1,517 +1,491 @@
 import React, { useState } from 'react';
-import {
-  FlatList,
-  Image,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-  Modal,
-} from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, Modal, TextInput, Image, StyleSheet, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-type Post = {
-  id: string;
-  user: string;
-  description: string;
-  image: string;
-  icon: string;
-};
+interface Post {
+  id: number;
+  user: {
+    name: string;
+    avatar: string;
+    bio?: string;
+  };
+  content: string;
+  image?: string;
+  comments: Comment[];
+  likes: number;
+  likedByUser?: boolean;
+}
 
-type Comment = {
-  id: string;
-  text: string;
+interface Comment {
+  id: number;
   user: {
     name: string;
     avatar: string;
   };
-};
+  text: string;
+}
 
-const currentUser = {
-  name: 'Marcelo Jara',
-  avatar: 'https://randomuser.me/api/portraits/men/32.jpg',
-};
-
-const initialPosts: Post[] = [
+const samplePosts: Post[] = [
   {
-    id: '1',
-    user: 'Marcelo Jara',
-    description: 'Este es el comentario del post !!',
-    image:
-      'https://images.unsplash.com/photo-1532274402911-5a369e4c4bb5?q=80&w=2940&auto=format&fit=crop',
-    icon: 'https://randomuser.me/api/portraits/men/32.jpg',
+    id: 1,
+    user: {
+      name: 'Juan Pérez',
+      avatar: 'https://randomuser.me/api/portraits/men/1.jpg',
+      bio: 'Amante del café ☕ | Viajero 🌍',
+    },
+    content: '¡Hola a todos! Este es mi primer post aquí.',
+    image: 'https://picsum.photos/id/1015/600/400',
+    comments: [
+      {
+        id: 1,
+        user: {
+          name: 'Ana Gómez',
+          avatar: 'https://randomuser.me/api/portraits/women/2.jpg',
+        },
+        text: '¡Bienvenido Juan!',
+      },
+    ],
+    likes: 5,
+    likedByUser: false,
   },
   {
-    id: '2',
-    user: 'Jamie Murcia',
-    description: 'Otro comentario interesante.',
-    image:
-      'https://images.unsplash.com/photo-1532274402911-5a369e4c4bb5?q=80&w=2940&auto=format&fit=crop',
-    icon: 'https://randomuser.me/api/portraits/women/21.jpg',
+    id: 2,
+    user: {
+      name: 'Lucía Fernández',
+      avatar: 'https://randomuser.me/api/portraits/women/3.jpg',
+      bio: 'Diseñadora UX 🎨',
+    },
+    content: '¡Miren esta vista desde mi ventana! 🌄',
+    image: 'https://picsum.photos/id/1043/600/400',
+    comments: [
+      {
+        id: 1,
+        user: {
+          name: 'Carlos Méndez',
+          avatar: 'https://randomuser.me/api/portraits/men/4.jpg',
+        },
+        text: 'Wow, qué lugar tan hermoso!',
+      },
+    ],
+    likes: 10,
+    likedByUser: false,
+  },
+  {
+    id: 3,
+    user: {
+      name: 'Pedro Ruiz',
+      avatar: 'https://randomuser.me/api/portraits/men/5.jpg',
+      bio: 'Tech lover 💻📱',
+    },
+    content: 'Probando mi nueva cámara 📷',
+    image: 'https://picsum.photos/id/237/600/400',
+    comments: [],
+    likes: 2,
+    likedByUser: false,
+  },
+  {
+    id: 4,
+    user: {
+      name: 'Sofía Martínez',
+      avatar: 'https://randomuser.me/api/portraits/women/6.jpg',
+      bio: 'Fotógrafa y viajera ✈️',
+    },
+    content: 'Una de mis fotos favoritas en París ❤️',
+    image: 'https://picsum.photos/id/1025/600/400',
+    comments: [
+      {
+        id: 1,
+        user: {
+          name: 'Laura Díaz',
+          avatar: 'https://randomuser.me/api/portraits/women/7.jpg',
+        },
+        text: '¡Qué bella foto!',
+      },
+      {
+        id: 2,
+        user: {
+          name: 'Mario Gómez',
+          avatar: 'https://randomuser.me/api/portraits/men/8.jpg',
+        },
+        text: 'París es mágico 😍',
+      },
+    ],
+    likes: 8,
+    likedByUser: false,
   },
 ];
 
-const ProfileModal = ({
-  visible,
-  onClose,
-  user,
-  onFollow,
-  onAddFriend,
-  onReport,
-}: {
-  visible: boolean;
-  onClose: () => void;
-  user: {
-    name: string;
-    avatar: string;
-    location: string;
-    bio: string;
-    email: string;
-    phone: string;
-  };
-  onFollow: () => void;
-  onAddFriend: () => void;
-  onReport: () => void;
-}) => {
-  return (
-    <Modal visible={visible} transparent animationType="slide">
-      <View style={styles.modalBackground}>
-        <View style={styles.modalContainer}>
-          <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-            <Ionicons name="close" size={28} color="#333" />
-          </TouchableOpacity>
-          <Image source={{ uri: user.avatar }} style={styles.avatar} />
-          <Text style={styles.userName}>{user.name}</Text>
-          <Text style={styles.userLocation}>{user.location}</Text>
-          <Text style={styles.userBio}>{user.bio}</Text>
-          <View style={styles.contactInfo}>
-            <Text style={styles.contactLabel}>Email:</Text>
-            <Text style={styles.contactValue}>{user.email}</Text>
-          </View>
-          <View style={styles.contactInfo}>
-            <Text style={styles.contactLabel}>Teléfono:</Text>
-            <Text style={styles.contactValue}>{user.phone}</Text>
-          </View>
-          <View style={styles.profileButtons}>
-            <TouchableOpacity style={styles.profileBtn} onPress={onFollow}>
-              <Ionicons name="person-add-outline" size={20} color="#007bff" />
-              <Text style={styles.profileBtnText}>Seguir</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.profileBtn} onPress={onAddFriend}>
-              <Ionicons name="people-outline" size={20} color="#007bff" />
-              <Text style={styles.profileBtnText}>Añadir amigo</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.profileBtnReport} onPress={onReport}>
-              <Ionicons name="flag-outline" size={20} color="#dc3545" />
-              <Text style={styles.profileBtnReportText}>Reportar</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
-    </Modal>
-  );
-};
+export default function HomeScreen() {
+  const [posts, setPosts] = useState<Post[]>(samplePosts);
+  const [selectedUser, setSelectedUser] = useState<Post['user'] | null>(null);
+  const [showCreatePostModal, setShowCreatePostModal] = useState(false);
+  const [newPostContent, setNewPostContent] = useState('');
+  const [newCommentText, setNewCommentText] = useState('');
+  const [commentingPostId, setCommentingPostId] = useState<number | null>(null);
 
-const HomeScreen: React.FC = () => {
-  const [posts, setPosts] = useState<Post[]>(initialPosts);
-  const [openPostId, setOpenPostId] = useState<string | null>(null);
-  const [comments, setComments] = useState<Record<string, Comment[]>>({
-    '1': [
-      {
-        id: 'init-1',
-        text: '¡Buen post, Marcelo!',
-        user: {
-          name: 'Jamie Murcia',
-          avatar: 'https://randomuser.me/api/portraits/women/21.jpg',
-        },
-      },
-    ],
-  });
-  const [newComment, setNewComment] = useState<string>('');
-  const [likesCount, setLikesCount] = useState<Record<string, number>>({
-    '1': 3,
-    '2': 1,
-  });
-  const [userLikes, setUserLikes] = useState<Record<string, boolean>>({});
-  const [modalVisible, setModalVisible] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<Post | null>(null);
-
-  const [newPostDescription, setNewPostDescription] = useState<string>('');
-  const [newPostImage, setNewPostImage] = useState<string>('');
-
-  const toggleComments = (postId: string) => {
-    setOpenPostId(openPostId === postId ? null : postId);
-  };
-
-  const handleAddComment = (postId: string) => {
-    if (!newComment.trim()) return;
-    const newEntry: Comment = {
-      id: Date.now().toString(),
-      text: newComment.trim(),
-      user: {
-        name: currentUser.name,
-        avatar: currentUser.avatar,
-      },
-    };
-    setComments((prev) => ({
-      ...prev,
-      [postId]: [...(prev[postId] || []), newEntry],
-    }));
-    setNewComment('');
-  };
-
-  const handleToggleLike = (postId: string) => {
-    setUserLikes((prev) => {
-      const isLiked = prev[postId];
-      setLikesCount((counts) => ({
-        ...counts,
-        [postId]: isLiked ? (counts[postId] || 1) - 1 : (counts[postId] || 0) + 1,
-      }));
-      return {
-        ...prev,
-        [postId]: !isLiked,
-      };
-    });
-  };
-
-  const openProfile = (user: Post) => {
-    setSelectedUser(user);
-    setModalVisible(true);
-  };
-
-  const closeProfile = () => {
-    setModalVisible(false);
-    setSelectedUser(null);
-  };
-
+  // Crear nuevo post
   const handleCreatePost = () => {
-    if (!newPostDescription.trim() || !newPostImage.trim()) return;
+    if (!newPostContent.trim()) return;
     const newPost: Post = {
-      id: Date.now().toString(),
-      user: currentUser.name,
-      description: newPostDescription.trim(),
-      image: newPostImage.trim(),
-      icon: currentUser.avatar,
+      id: posts.length + 1,
+      user: {
+        name: 'Tú',
+        avatar: 'https://i.pravatar.cc/150?img=10',
+        bio: 'Mi perfil',
+      },
+      content: newPostContent,
+      comments: [],
+      likes: 0,
+      likedByUser: false,
     };
-    setPosts((prev) => [newPost, ...prev]);
-    setNewPostDescription('');
-    setNewPostImage('');
+    setPosts([newPost, ...posts]);
+    setNewPostContent('');
+    setShowCreatePostModal(false);
   };
 
-  const renderItem = ({ item }: { item: Post }) => (
-    <View style={styles.card}>
-      <View style={styles.header}>
-        <Image source={{ uri: item.icon }} style={styles.icon} />
-        <View>
-          <TouchableOpacity onPress={() => openProfile(item)}>
-            <Text style={styles.userDark}>{item.user}</Text>
-          </TouchableOpacity>
-          <Text style={styles.time}>{'Just now'}</Text>
-        </View>
+  // Dar like/unlike a un post
+  const toggleLike = (postId: number) => {
+    setPosts(posts.map(post => {
+      if (post.id === postId) {
+        const liked = !post.likedByUser;
+        return {
+          ...post,
+          likedByUser: liked,
+          likes: liked ? post.likes + 1 : post.likes - 1,
+        };
+      }
+      return post;
+    }));
+  };
+
+  // Añadir comentario a un post
+  const handleAddComment = () => {
+    if (!newCommentText.trim() || commentingPostId === null) return;
+
+    setPosts(posts.map(post => {
+      if (post.id === commentingPostId) {
+        const newComment: Comment = {
+          id: post.comments.length + 1,
+          user: {
+            name: 'Tú',
+            avatar: 'https://i.pravatar.cc/150?img=10',
+          },
+          text: newCommentText,
+        };
+        return {
+          ...post,
+          comments: [...post.comments, newComment],
+        };
+      }
+      return post;
+    }));
+
+    setNewCommentText('');
+    setCommentingPostId(null);
+  };
+
+  // Render de cada comentario
+  const renderComment = ({ item }: { item: Comment }) => (
+    <View style={styles.commentContainer}>
+      <Image source={{ uri: item.user.avatar }} style={styles.commentAvatar} />
+      <View style={styles.commentBubble}>
+        <Text style={styles.commentName}>{item.user.name}</Text>
+        <Text>{item.text}</Text>
       </View>
-      <Text style={styles.description}>{item.description}</Text>
-      <Image source={{ uri: item.image }} style={styles.postImage} />
-      <View style={styles.actions}>
-        <TouchableOpacity
-          style={styles.actionBtn}
-          onPress={() => handleToggleLike(item.id)}
-        >
-          <Ionicons
-            name={userLikes[item.id] ? 'heart' : 'heart-outline'}
-            size={20}
-            color={userLikes[item.id] ? 'red' : 'black'}
-          />
-          <Text style={styles.actionText}>Me gusta</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.actionBtn} onPress={() => toggleComments(item.id)}>
-          <Ionicons name="chatbubble-outline" size={20} color="black" />
-          <Text style={styles.actionText}>Comentar</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.actionBtn}>
-          <Ionicons name="share-social-outline" size={20} color="black" />
-          <Text style={styles.actionText}>Compartir</Text>
-        </TouchableOpacity>
-      </View>
-      {openPostId === item.id && (
-        <View style={styles.commentSection}>
-          {(comments[item.id] || []).map((comment) => (
-            <View key={comment.id} style={styles.commentItem}>
-              <Image source={{ uri: comment.user.avatar }} style={styles.commentAvatar} />
-              <View>
-                <Text style={styles.commentAuthor}>{comment.user.name}</Text>
-                <Text style={styles.commentText}>{comment.text}</Text>
-              </View>
-            </View>
-          ))}
-          <View style={styles.commentInputContainer}>
-            <TextInput
-              placeholder="Escribe un comentario..."
-              value={newComment}
-              onChangeText={setNewComment}
-              style={styles.commentInput}
-              multiline
-            />
-            <TouchableOpacity onPress={() => handleAddComment(item.id)}>
-              <Ionicons name="send" size={24} color="blue" />
-            </TouchableOpacity>
-          </View>
-        </View>
-      )}
-      {selectedUser && (
-        <ProfileModal
-          visible={modalVisible}
-          onClose={closeProfile}
-          user={{
-            name: selectedUser.user,
-            avatar: selectedUser.icon,
-            location: 'Ciudad de México, México',
-            bio: 'Apasionado por la tecnología, el deporte y la fotografía.',
-            email: 'usuario@example.com',
-            phone: '+52 55 1234 5678',
-          }}
-          onFollow={() => alert('Seguir usuario')}
-          onAddFriend={() => alert('Añadir amigo')}
-          onReport={() => alert('Reportar usuario')}
+    </View>
+  );
+
+  // Render de cada post (en feed y en perfil)
+  const renderPost = ({ item }: { item: Post }) => (
+    <View style={styles.postCard}>
+      <TouchableOpacity onPress={() => setSelectedUser(item.user)} style={styles.postHeader}>
+        <Image source={{ uri: item.user.avatar }} style={styles.postAvatar} />
+        <Text style={styles.postUsername}>{item.user.name}</Text>
+      </TouchableOpacity>
+      <Text style={styles.postContent}>{item.content}</Text>
+      {item.image && (
+        <Image
+          source={{ uri: item.image }}
+          style={styles.postImage}
+          resizeMode="cover"
         />
+      )}
+
+      {/* Likes y botón like */}
+      <View style={styles.likeContainer}>
+        <TouchableOpacity onPress={() => toggleLike(item.id)} style={styles.likeButton}>
+          <Ionicons
+            name={item.likedByUser ? 'heart' : 'heart-outline'}
+            size={24}
+            color={item.likedByUser ? '#e0245e' : '#555'}
+          />
+          <Text style={styles.likeCount}>{item.likes}</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Comentarios */}
+      <FlatList
+        data={item.comments}
+        keyExtractor={(comment) => comment.id.toString()}
+        renderItem={renderComment}
+        scrollEnabled={false}
+        style={styles.commentsList}
+      />
+
+      {/* Agregar comentario */}
+      {commentingPostId === item.id ? (
+        <View style={styles.addCommentContainer}>
+          <TextInput
+            placeholder="Escribe un comentario..."
+            value={newCommentText}
+            onChangeText={setNewCommentText}
+            style={styles.commentInput}
+          />
+          <TouchableOpacity onPress={handleAddComment} style={styles.sendCommentButton}>
+            <Ionicons name="send" size={24} color="#007AFF" />
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <TouchableOpacity onPress={() => setCommentingPostId(item.id)} style={styles.addCommentButton}>
+          <Text style={{ color: '#007AFF' }}>Agregar comentario</Text>
+        </TouchableOpacity>
       )}
     </View>
   );
 
+  // Posts del usuario seleccionado para mostrar en el modal perfil
+  const userPosts = selectedUser
+    ? posts.filter(post => post.user.name === selectedUser.name)
+    : [];
+
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
-      <ScrollView style={styles.container}>
-        <View style={styles.createPostContainer}>
+    <View style={styles.container}>
+      <FlatList
+        data={posts}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={renderPost}
+        contentContainerStyle={styles.postsContainer}
+      />
+
+      {/* Botón flotante */}
+      <TouchableOpacity onPress={() => setShowCreatePostModal(true)} style={styles.fab}>
+        <Ionicons name="add" size={30} color="white" />
+      </TouchableOpacity>
+
+      {/* Modal de perfil con publicaciones del usuario */}
+      <Modal visible={!!selectedUser} animationType="slide">
+        <View style={styles.modalContainer}>
+          <TouchableOpacity onPress={() => setSelectedUser(null)} style={styles.modalBack}>
+            <Ionicons name="arrow-back" size={28} color="black" />
+          </TouchableOpacity>
+          {selectedUser && (
+            <ScrollView>
+              <View style={styles.profileInfo}>
+                <Image source={{ uri: selectedUser.avatar }} style={styles.profileAvatar} />
+                <Text style={styles.profileName}>{selectedUser.name}</Text>
+                {selectedUser.bio && <Text style={styles.profileBio}>{selectedUser.bio}</Text>}
+
+                {/* Botones Agregar, Seguir y Reportar */}
+                <View style={styles.profileButtonsContainer}>
+                  <TouchableOpacity style={styles.profileButton}>
+                    <Text style={styles.profileButtonText}>Agregar</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.profileButton}>
+                    <Text style={styles.profileButtonText}>Seguir</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.profileButtonReport}>
+                    <Text style={styles.profileButtonReportText}>Reportar</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              <Text style={[styles.modalTitle, { marginTop: 20, marginBottom: 10 }]}>Publicaciones</Text>
+              {userPosts.length === 0 ? (
+                <Text style={{ textAlign: 'center', color: '#666' }}>Este usuario no tiene publicaciones.</Text>
+              ) : (
+                <FlatList
+                  data={userPosts}
+                  keyExtractor={(post) => post.id.toString()}
+                  renderItem={renderPost}
+                  scrollEnabled={false}
+                />
+              )}
+            </ScrollView>
+          )}
+        </View>
+      </Modal>
+
+
+      {/* Modal para crear post */}
+      <Modal visible={showCreatePostModal} animationType="slide">
+        <View style={styles.modalContainer}>
+          <TouchableOpacity onPress={() => setShowCreatePostModal(false)} style={styles.modalBack}>
+            <Ionicons name="arrow-back" size={28} color="black" />
+          </TouchableOpacity>
+          <Text style={styles.modalTitle}>Crear nuevo post</Text>
           <TextInput
             placeholder="¿Qué estás pensando?"
-            value={newPostDescription}
-            onChangeText={setNewPostDescription}
-            style={styles.createPostInput}
             multiline
+            value={newPostContent}
+            onChangeText={setNewPostContent}
+            style={styles.textInput}
           />
-          <TouchableOpacity style={styles.createPostButton} onPress={handleCreatePost}>
-            <Text style={styles.createPostButtonText}>Publicar</Text>
+          <TouchableOpacity onPress={handleCreatePost} style={styles.publishButton}>
+            <Text style={styles.publishText}>Publicar</Text>
           </TouchableOpacity>
         </View>
-        <FlatList
-          data={posts}
-          renderItem={renderItem}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={{ paddingBottom: 20 }}
-        />
-      </ScrollView>
-    </KeyboardAvoidingView>
+      </Modal>
+    </View>
   );
-};
-
+}
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f0f2f5',
-  },
-  card: {
-    backgroundColor: '#fff',
-    margin: 12,
-    borderRadius: 12,
-    padding: 12,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.2,
-        shadowRadius: 3,
-      },
-      android: {
-        elevation: 3,
-      },
-    }),
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 6,
-  },
-  icon: {
-    width: 40,
-    height: 40,
+  container: { flex: 1, backgroundColor: '#f9f9f9', paddingTop: 20 },
+  postsContainer: { paddingVertical: 20 },
+  postCard: {
+    backgroundColor: 'white',
     borderRadius: 20,
-    marginRight: 10,
+    padding: 16,
+    marginVertical: 10,
+    marginHorizontal: 16,
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowOffset: { width: 0, height: 3 },
+    shadowRadius: 6,
+    elevation: 4,
   },
-  userDark: {
-    fontWeight: '700',
-    fontSize: 16,
-    color: '#111',
-  },
-  time: {
-    color: '#666',
-    fontSize: 12,
-  },
-  description: {
-    fontSize: 14,
-    marginBottom: 10,
-    color: '#222',
-  },
+  postHeader: { flexDirection: 'row', alignItems: 'center' },
+  postAvatar: { width: 40, height: 40, borderRadius: 20, marginRight: 12 },
+  postUsername: { fontWeight: 'bold', fontSize: 16 },
+  postContent: { marginTop: 12, fontSize: 15, lineHeight: 20 },
   postImage: {
     width: '100%',
-    height: 250,
-    borderRadius: 12,
-    marginBottom: 10,
+    height: 200,
+    borderRadius: 16,
+    marginTop: 12,
+    backgroundColor: '#eaeaea',
   },
-  actions: {
+  commentsList: { marginTop: 12 },
+  commentContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginBottom: 10,
+    marginTop: 8,
+    paddingHorizontal: 12,
   },
-  actionBtn: {
+  commentAvatar: { width: 28, height: 28, borderRadius: 14, marginRight: 10 },
+  commentBubble: {
+    backgroundColor: '#f1f1f1',
+    padding: 10,
+    borderRadius: 12,
+    flex: 1,
+  },
+  commentName: { fontWeight: 'bold' },
+  fab: {
+    position: 'absolute',
+    bottom: 30,
+    right: 30,
+    backgroundColor: '#007AFF',
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 6,
+  },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: 'white',
+    paddingTop: 60,
+    paddingHorizontal: 20,
+  },
+  modalBack: { marginBottom: 20 },
+  modalTitle: { fontSize: 20, fontWeight: 'bold', marginBottom: 12 },
+  textInput: {
+    height: 120,
+    borderColor: '#ccc',
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 12,
+    textAlignVertical: 'top',
+  },
+  publishButton: {
+    backgroundColor: '#007AFF',
+    padding: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  publishText: { color: 'white', fontSize: 16, fontWeight: 'bold' },
+  profileInfo: { alignItems: 'center' },
+  profileAvatar: { width: 100, height: 100, borderRadius: 50, marginBottom: 16 },
+  profileName: { fontSize: 24, fontWeight: 'bold' },
+  profileBio: { marginTop: 8, color: '#555', fontSize: 16 },
+  likeContainer: {
+    flexDirection: 'row',
+    marginTop: 10,
+  },
+  likeButton: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  actionText: {
-    marginLeft: 4,
-    fontWeight: '600',
+  likeCount: {
+    marginLeft: 6,
+    fontSize: 16,
+    color: '#555',
   },
-  commentSection: {
-    borderTopWidth: 1,
-    borderTopColor: '#ddd',
-    paddingTop: 10,
+  addCommentButton: {
+    marginTop: 12,
   },
-  commentItem: {
+  addCommentContainer: {
     flexDirection: 'row',
-    marginBottom: 8,
-  },
-  commentAvatar: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    marginRight: 8,
-  },
-  commentAuthor: {
-    fontWeight: '700',
-    fontSize: 13,
-  },
-  commentText: {
-    fontSize: 13,
-  },
-  commentInputContainer: {
-    flexDirection: 'row',
+    marginTop: 12,
     alignItems: 'center',
   },
   commentInput: {
     flex: 1,
-    borderColor: '#ddd',
+    borderColor: '#ccc',
     borderWidth: 1,
     borderRadius: 20,
     paddingHorizontal: 12,
     paddingVertical: 6,
     marginRight: 8,
-    fontSize: 14,
+    height: 36,
   },
-  modalBackground: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-    justifyContent: 'center',
-    alignItems: 'center',
+  sendCommentButton: {
+    padding: 6,
   },
-  modalContainer: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 20,
-    width: '90%',
-    maxWidth: 400,
-  },
-  closeButton: {
-    alignSelf: 'flex-end',
-  },
-  avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    alignSelf: 'center',
-    marginBottom: 10,
-  },
-  userName: {
-    fontWeight: '700',
-    fontSize: 20,
-    textAlign: 'center',
-  },
-  userLocation: {
-    textAlign: 'center',
-    fontSize: 14,
-    color: '#555',
-  },
-  userBio: {
-    textAlign: 'center',
-    marginVertical: 10,
-    fontSize: 14,
-  },
-  contactInfo: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginVertical: 4,
-  },
-  contactLabel: {
-    fontWeight: '700',
-    marginRight: 5,
-  },
-  contactValue: {
-    color: '#444',
-  },
-  profileButtons: {
+
+  profileButtonsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    marginTop: 15,
-  },
-  profileBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  profileBtnText: {
-    color: '#007bff',
-    marginLeft: 6,
-    fontWeight: '600',
-  },
-  profileBtnReport: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  profileBtnReportText: {
-    color: '#dc3545',
-    marginLeft: 6,
-    fontWeight: '600',
-  },
-  createPostContainer: {
-    margin: 12,
-    backgroundColor: '#fff',
-    padding: 12,
-    borderRadius: 12,
-  },
-  createPostInput: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    marginTop: 20,
     marginBottom: 10,
-    fontSize: 14,
+    width: '100%',
   },
-  createPostButton: {
-    backgroundColor: '#007bff',
+  profileButton: {
+    backgroundColor: '#007AFF',
     paddingVertical: 10,
-    borderRadius: 20,
+    paddingHorizontal: 20,
+    borderRadius: 25,
+    minWidth: 90,
     alignItems: 'center',
   },
-  createPostButtonText: {
-    color: '#fff',
-    fontWeight: '700',
+  profileButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
     fontSize: 16,
   },
-});
+  profileButtonReport: {
+    backgroundColor: '#FF3B30',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 25,
+    minWidth: 90,
+    alignItems: 'center',
+  },
+  profileButtonReportText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
 
-export default HomeScreen;
+});
