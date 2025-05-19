@@ -31,13 +31,12 @@ type Comment = {
   };
 };
 
-// Usuario autenticado simulado
 const currentUser = {
   name: 'Marcelo Jara',
   avatar: 'https://randomuser.me/api/portraits/men/32.jpg',
 };
 
-const DATA: Post[] = [
+const initialPosts: Post[] = [
   {
     id: '1',
     user: 'Marcelo Jara',
@@ -85,24 +84,18 @@ const ProfileModal = ({
           <TouchableOpacity style={styles.closeButton} onPress={onClose}>
             <Ionicons name="close" size={28} color="#333" />
           </TouchableOpacity>
-
           <Image source={{ uri: user.avatar }} style={styles.avatar} />
-
           <Text style={styles.userName}>{user.name}</Text>
           <Text style={styles.userLocation}>{user.location}</Text>
-
           <Text style={styles.userBio}>{user.bio}</Text>
-
           <View style={styles.contactInfo}>
             <Text style={styles.contactLabel}>Email:</Text>
             <Text style={styles.contactValue}>{user.email}</Text>
           </View>
-
           <View style={styles.contactInfo}>
             <Text style={styles.contactLabel}>Teléfono:</Text>
             <Text style={styles.contactValue}>{user.phone}</Text>
           </View>
-
           <View style={styles.profileButtons}>
             <TouchableOpacity style={styles.profileBtn} onPress={onFollow}>
               <Ionicons name="person-add-outline" size={20} color="#007bff" />
@@ -124,6 +117,7 @@ const ProfileModal = ({
 };
 
 const HomeScreen: React.FC = () => {
+  const [posts, setPosts] = useState<Post[]>(initialPosts);
   const [openPostId, setOpenPostId] = useState<string | null>(null);
   const [comments, setComments] = useState<Record<string, Comment[]>>({
     '1': [
@@ -138,17 +132,16 @@ const HomeScreen: React.FC = () => {
     ],
   });
   const [newComment, setNewComment] = useState<string>('');
-
   const [likesCount, setLikesCount] = useState<Record<string, number>>({
     '1': 3,
     '2': 1,
   });
-
   const [userLikes, setUserLikes] = useState<Record<string, boolean>>({});
-
-  // Modal para perfil
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedUser, setSelectedUser] = useState<Post | null>(null);
+
+  const [newPostDescription, setNewPostDescription] = useState<string>('');
+  const [newPostImage, setNewPostImage] = useState<string>('');
 
   const toggleComments = (postId: string) => {
     setOpenPostId(openPostId === postId ? null : postId);
@@ -164,7 +157,6 @@ const HomeScreen: React.FC = () => {
         avatar: currentUser.avatar,
       },
     };
-
     setComments((prev) => ({
       ...prev,
       [postId]: [...(prev[postId] || []), newEntry],
@@ -196,6 +188,20 @@ const HomeScreen: React.FC = () => {
     setSelectedUser(null);
   };
 
+  const handleCreatePost = () => {
+    if (!newPostDescription.trim() || !newPostImage.trim()) return;
+    const newPost: Post = {
+      id: Date.now().toString(),
+      user: currentUser.name,
+      description: newPostDescription.trim(),
+      image: newPostImage.trim(),
+      icon: currentUser.avatar,
+    };
+    setPosts((prev) => [newPost, ...prev]);
+    setNewPostDescription('');
+    setNewPostImage('');
+  };
+
   const renderItem = ({ item }: { item: Post }) => (
     <View style={styles.card}>
       <View style={styles.header}>
@@ -207,10 +213,8 @@ const HomeScreen: React.FC = () => {
           <Text style={styles.time}>{'Just now'}</Text>
         </View>
       </View>
-
       <Text style={styles.description}>{item.description}</Text>
       <Image source={{ uri: item.image }} style={styles.postImage} />
-
       <View style={styles.actions}>
         <TouchableOpacity
           style={styles.actionBtn}
@@ -221,9 +225,7 @@ const HomeScreen: React.FC = () => {
             size={20}
             color={userLikes[item.id] ? 'red' : 'black'}
           />
-          <Text style={styles.actionText}>
-            Me gusta {likesCount[item.id] ? `(${likesCount[item.id]})` : ''}
-          </Text>
+          <Text style={styles.actionText}>Me gusta</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.actionBtn} onPress={() => toggleComments(item.id)}>
           <Ionicons name="chatbubble-outline" size={20} color="black" />
@@ -234,7 +236,6 @@ const HomeScreen: React.FC = () => {
           <Text style={styles.actionText}>Compartir</Text>
         </TouchableOpacity>
       </View>
-
       {openPostId === item.id && (
         <View style={styles.commentSection}>
           {(comments[item.id] || []).map((comment) => (
@@ -260,8 +261,6 @@ const HomeScreen: React.FC = () => {
           </View>
         </View>
       )}
-
-      {/* Modal */}
       {selectedUser && (
         <ProfileModal
           visible={modalVisible}
@@ -288,8 +287,20 @@ const HomeScreen: React.FC = () => {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView style={styles.container}>
+        <View style={styles.createPostContainer}>
+          <TextInput
+            placeholder="¿Qué estás pensando?"
+            value={newPostDescription}
+            onChangeText={setNewPostDescription}
+            style={styles.createPostInput}
+            multiline
+          />
+          <TouchableOpacity style={styles.createPostButton} onPress={handleCreatePost}>
+            <Text style={styles.createPostButtonText}>Publicar</Text>
+          </TouchableOpacity>
+        </View>
         <FlatList
-          data={DATA}
+          data={posts}
           renderItem={renderItem}
           keyExtractor={(item) => item.id}
           contentContainerStyle={{ paddingBottom: 20 }}
@@ -298,6 +309,7 @@ const HomeScreen: React.FC = () => {
     </KeyboardAvoidingView>
   );
 };
+
 
 const styles = StyleSheet.create({
   container: {
@@ -324,7 +336,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   icon: {
     width: 40,
@@ -332,61 +344,56 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     marginRight: 10,
   },
-  user: {
+  userDark: {
+    fontWeight: '700',
     fontSize: 16,
-    fontWeight: '600',
-    color: '#007bff',
+    color: '#111',
   },
   time: {
+    color: '#666',
     fontSize: 12,
-    color: '#888',
-    marginTop: 2,
   },
   description: {
     fontSize: 14,
-    marginBottom: 8,
+    marginBottom: 10,
+    color: '#222',
   },
   postImage: {
     width: '100%',
     height: 250,
-    borderRadius: 10,
-    marginBottom: 8,
+    borderRadius: 12,
+    marginBottom: 10,
   },
   actions: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    borderTopWidth: 1,
-    borderTopColor: '#eee',
-    paddingTop: 10,
-    marginTop: 10,
+    marginBottom: 10,
   },
   actionBtn: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   actionText: {
-    marginLeft: 6,
-    fontSize: 12,
+    marginLeft: 4,
+    fontWeight: '600',
   },
   commentSection: {
-    marginTop: 10,
     borderTopWidth: 1,
-    borderTopColor: '#ccc',
+    borderTopColor: '#ddd',
     paddingTop: 10,
   },
   commentItem: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: 10,
+    marginBottom: 8,
   },
   commentAvatar: {
     width: 30,
     height: 30,
     borderRadius: 15,
-    marginRight: 10,
+    marginRight: 8,
   },
   commentAuthor: {
-    fontWeight: '600',
+    fontWeight: '700',
     fontSize: 13,
   },
   commentText: {
@@ -395,22 +402,20 @@ const styles = StyleSheet.create({
   commentInputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderTopWidth: 1,
-    borderTopColor: '#ddd',
-    paddingTop: 8,
   },
   commentInput: {
     flex: 1,
-    height: 40,
-    paddingHorizontal: 10,
-    backgroundColor: '#f0f0f0',
+    borderColor: '#ddd',
+    borderWidth: 1,
     borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    marginRight: 8,
     fontSize: 14,
   },
-
   modalBackground: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(0,0,0,0.4)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -419,65 +424,53 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 20,
     width: '90%',
-    maxWidth: 350,
-    alignItems: 'center',
+    maxWidth: 400,
   },
   closeButton: {
     alignSelf: 'flex-end',
   },
   avatar: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    marginBottom: 12,
-  },
-  userName: {
-    fontSize: 22,
-    fontWeight: '700',
-    marginBottom: 4,
-  },
-  userLocation: {
-    fontSize: 14,
-    color: '#777',
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    alignSelf: 'center',
     marginBottom: 10,
   },
-  userBio: {
-    fontSize: 14,
+  userName: {
+    fontWeight: '700',
+    fontSize: 20,
     textAlign: 'center',
-    marginBottom: 16,
-    color: '#444',
+  },
+  userLocation: {
+    textAlign: 'center',
+    fontSize: 14,
+    color: '#555',
+  },
+  userBio: {
+    textAlign: 'center',
+    marginVertical: 10,
+    fontSize: 14,
   },
   contactInfo: {
     flexDirection: 'row',
-    marginBottom: 8,
-    width: '100%',
     justifyContent: 'center',
+    marginVertical: 4,
   },
   contactLabel: {
-    fontWeight: '600',
-    marginRight: 6,
-    color: '#555',
+    fontWeight: '700',
+    marginRight: 5,
   },
   contactValue: {
-    color: '#333',
+    color: '#444',
   },
   profileButtons: {
     flexDirection: 'row',
-    justifyContent: 'center',
-    flexWrap: 'wrap',       // Permite que los botones pasen a otra fila si no caben
-    width: '100%',
-    marginTop: 16,
+    justifyContent: 'space-around',
+    marginTop: 15,
   },
   profileBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#e7f0ff',
-    borderRadius: 25,
-    paddingVertical: 8,
-    paddingHorizontal: 15,
-    margin: 5,              // Cambié marginHorizontal por margin para mejor separación
-    minWidth: 100,          // Ancho mínimo para que los botones no queden muy chicos
-    justifyContent: 'center',
   },
   profileBtnText: {
     color: '#007bff',
@@ -487,25 +480,38 @@ const styles = StyleSheet.create({
   profileBtnReport: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fdecea',
-    borderRadius: 25,
-    paddingVertical: 8,
-    paddingHorizontal: 15,
-    margin: 5,
-    minWidth: 100,
-    justifyContent: 'center',
   },
   profileBtnReportText: {
     color: '#dc3545',
     marginLeft: 6,
     fontWeight: '600',
   },
-  userDark: {
+  createPostContainer: {
+    margin: 12,
+    backgroundColor: '#fff',
+    padding: 12,
+    borderRadius: 12,
+  },
+  createPostInput: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginBottom: 10,
+    fontSize: 14,
+  },
+  createPostButton: {
+    backgroundColor: '#007bff',
+    paddingVertical: 10,
+    borderRadius: 20,
+    alignItems: 'center',
+  },
+  createPostButtonText: {
+    color: '#fff',
+    fontWeight: '700',
     fontSize: 16,
-    fontWeight: '600',
-    color: '#222',  // texto oscuro
   },
 });
 
 export default HomeScreen;
-
