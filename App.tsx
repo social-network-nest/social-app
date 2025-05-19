@@ -1,10 +1,12 @@
-// App.tsx
+import 'react-native-gesture-handler';
 import React from 'react';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { HomeScreen, ChatScreen, MessageScreen } from './src/screens';
+import 'react-native-gesture-handler';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -37,15 +39,17 @@ function MyTabs() {
 
 export default function App() {
   return (
-    <NavigationContainer>
-      <Stack.Navigator>
-        <Stack.Screen
-          name="Chat"
-          component={MyTabs}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen name="Message" component={MessageScreen} />
-      </Stack.Navigator>
-    </NavigationContainer>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <NavigationContainer>
+        <Stack.Navigator>
+          <Stack.Screen
+            name="Chat"
+            component={MyTabs}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen name="Message" component={MessageScreen} />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </GestureHandlerRootView>
   );
 }

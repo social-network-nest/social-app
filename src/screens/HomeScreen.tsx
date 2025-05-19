@@ -1,5 +1,16 @@
 import React, { useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, Modal, TextInput, Image, StyleSheet, ScrollView } from 'react-native';
+import {
+  View,
+  Text,
+  FlatList,
+  TouchableOpacity,
+  Modal,
+  TextInput,
+  Image,
+  StyleSheet,
+  ScrollView,
+  SafeAreaView,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 interface Post {
@@ -123,7 +134,6 @@ export default function HomeScreen() {
   const [newCommentText, setNewCommentText] = useState('');
   const [commentingPostId, setCommentingPostId] = useState<number | null>(null);
 
-  // Crear nuevo post
   const handleCreatePost = () => {
     if (!newPostContent.trim()) return;
     const newPost: Post = {
@@ -143,7 +153,6 @@ export default function HomeScreen() {
     setShowCreatePostModal(false);
   };
 
-  // Dar like/unlike a un post
   const toggleLike = (postId: number) => {
     setPosts(posts.map(post => {
       if (post.id === postId) {
@@ -158,7 +167,6 @@ export default function HomeScreen() {
     }));
   };
 
-  // Añadir comentario a un post
   const handleAddComment = () => {
     if (!newCommentText.trim() || commentingPostId === null) return;
 
@@ -184,19 +192,23 @@ export default function HomeScreen() {
     setCommentingPostId(null);
   };
 
-  // Render de cada comentario
+  const handleDeletePost = (postId: number) => {
+    setPosts(posts.filter(post => post.id !== postId));
+  };
+
   const renderComment = ({ item }: { item: Comment }) => (
     <View style={styles.commentContainer}>
-      <Image source={{ uri: item.user.avatar }} style={styles.commentAvatar} />
-      <View style={styles.commentBubble}>
+      <TouchableOpacity onPress={() => setSelectedUser(item.user)}>
+        <Image source={{ uri: item.user.avatar }} style={styles.commentAvatar} />
+      </TouchableOpacity>
+      <TouchableOpacity onPress={() => setSelectedUser(item.user)} style={styles.commentBubble}>
         <Text style={styles.commentName}>{item.user.name}</Text>
         <Text>{item.text}</Text>
-      </View>
+      </TouchableOpacity>
     </View>
   );
 
-  // Render de cada post (en feed y en perfil)
-  const renderPost = ({ item }: { item: Post }) => (
+  const renderPost = ({ item }: { item: Post }, isProfileView = false) => (
     <View style={styles.postCard}>
       <TouchableOpacity onPress={() => setSelectedUser(item.user)} style={styles.postHeader}>
         <Image source={{ uri: item.user.avatar }} style={styles.postAvatar} />
@@ -210,8 +222,6 @@ export default function HomeScreen() {
           resizeMode="cover"
         />
       )}
-
-      {/* Likes y botón like */}
       <View style={styles.likeContainer}>
         <TouchableOpacity onPress={() => toggleLike(item.id)} style={styles.likeButton}>
           <Ionicons
@@ -221,9 +231,15 @@ export default function HomeScreen() {
           />
           <Text style={styles.likeCount}>{item.likes}</Text>
         </TouchableOpacity>
+        {isProfileView && (
+          <TouchableOpacity
+            onPress={() => handleDeletePost(item.id)}
+            style={styles.deleteButton}
+          >
+            <Text style={{ color: 'red', marginLeft: 15 }}>Eliminar</Text>
+          </TouchableOpacity>
+        )}
       </View>
-
-      {/* Comentarios */}
       <FlatList
         data={item.comments}
         keyExtractor={(comment) => comment.id.toString()}
@@ -231,8 +247,6 @@ export default function HomeScreen() {
         scrollEnabled={false}
         style={styles.commentsList}
       />
-
-      {/* Agregar comentario */}
       {commentingPostId === item.id ? (
         <View style={styles.addCommentContainer}>
           <TextInput
@@ -253,13 +267,13 @@ export default function HomeScreen() {
     </View>
   );
 
-  // Posts del usuario seleccionado para mostrar en el modal perfil
+
   const userPosts = selectedUser
     ? posts.filter(post => post.user.name === selectedUser.name)
     : [];
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <FlatList
         data={posts}
         keyExtractor={(item) => item.id.toString()}
@@ -267,14 +281,12 @@ export default function HomeScreen() {
         contentContainerStyle={styles.postsContainer}
       />
 
-      {/* Botón flotante */}
       <TouchableOpacity onPress={() => setShowCreatePostModal(true)} style={styles.fab}>
         <Ionicons name="add" size={30} color="white" />
       </TouchableOpacity>
 
-      {/* Modal de perfil con publicaciones del usuario */}
       <Modal visible={!!selectedUser} animationType="slide">
-        <View style={styles.modalContainer}>
+        <SafeAreaView style={styles.modalContainer}>
           <TouchableOpacity onPress={() => setSelectedUser(null)} style={styles.modalBack}>
             <Ionicons name="arrow-back" size={28} color="black" />
           </TouchableOpacity>
@@ -284,8 +296,6 @@ export default function HomeScreen() {
                 <Image source={{ uri: selectedUser.avatar }} style={styles.profileAvatar} />
                 <Text style={styles.profileName}>{selectedUser.name}</Text>
                 {selectedUser.bio && <Text style={styles.profileBio}>{selectedUser.bio}</Text>}
-
-                {/* Botones Agregar, Seguir y Reportar */}
                 <View style={styles.profileButtonsContainer}>
                   <TouchableOpacity style={styles.profileButton}>
                     <Text style={styles.profileButtonText}>Agregar</Text>
@@ -293,135 +303,93 @@ export default function HomeScreen() {
                   <TouchableOpacity style={styles.profileButton}>
                     <Text style={styles.profileButtonText}>Seguir</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity style={styles.profileButtonReport}>
-                    <Text style={styles.profileButtonReportText}>Reportar</Text>
+                  <TouchableOpacity style={styles.profileButton}>
+                    <Text style={styles.profileButtonText}>Reportar</Text>
                   </TouchableOpacity>
                 </View>
               </View>
-
-              <Text style={[styles.modalTitle, { marginTop: 20, marginBottom: 10 }]}>Publicaciones</Text>
-              {userPosts.length === 0 ? (
-                <Text style={{ textAlign: 'center', color: '#666' }}>Este usuario no tiene publicaciones.</Text>
-              ) : (
-                <FlatList
-                  data={userPosts}
-                  keyExtractor={(post) => post.id.toString()}
-                  renderItem={renderPost}
-                  scrollEnabled={false}
-                />
-              )}
+              <FlatList
+                data={userPosts}
+                keyExtractor={(item) => item.id.toString()}
+                renderItem={({ item }) => renderPost({ item }, true)} // <-- Aquí debe ir true
+              />
             </ScrollView>
           )}
-        </View>
+        </SafeAreaView>
       </Modal>
 
-
-      {/* Modal para crear post */}
       <Modal visible={showCreatePostModal} animationType="slide">
-        <View style={styles.modalContainer}>
-          <TouchableOpacity onPress={() => setShowCreatePostModal(false)} style={styles.modalBack}>
-            <Ionicons name="arrow-back" size={28} color="black" />
-          </TouchableOpacity>
-          <Text style={styles.modalTitle}>Crear nuevo post</Text>
-          <TextInput
-            placeholder="¿Qué estás pensando?"
-            multiline
-            value={newPostContent}
-            onChangeText={setNewPostContent}
-            style={styles.textInput}
-          />
-          <TouchableOpacity onPress={handleCreatePost} style={styles.publishButton}>
-            <Text style={styles.publishText}>Publicar</Text>
-          </TouchableOpacity>
-        </View>
+        <SafeAreaView style={styles.modalContainer}>
+          <View style={styles.createPostModalContent}>
+            <Text style={styles.createPostTitle}>Crear nuevo post</Text>
+            <TextInput
+              multiline
+              placeholder="¿Qué quieres compartir?"
+              value={newPostContent}
+              onChangeText={setNewPostContent}
+              style={styles.createPostInput}
+            />
+            <View style={styles.createPostButtons}>
+              <TouchableOpacity onPress={() => setShowCreatePostModal(false)} style={[styles.modalButton, { backgroundColor: '#ccc' }]}>
+                <Text>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={handleCreatePost} style={[styles.modalButton, { backgroundColor: '#007AFF' }]}>
+                <Text style={{ color: 'white' }}>Publicar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </SafeAreaView>
       </Modal>
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f9f9f9', paddingTop: 20 },
-  postsContainer: { paddingVertical: 20 },
-  postCard: {
-    backgroundColor: 'white',
-    borderRadius: 20,
-    padding: 16,
-    marginVertical: 10,
-    marginHorizontal: 16,
-    shadowColor: '#000',
-    shadowOpacity: 0.08,
-    shadowOffset: { width: 0, height: 3 },
-    shadowRadius: 6,
-    elevation: 4,
+  container: {
+    flex: 1,
   },
-  postHeader: { flexDirection: 'row', alignItems: 'center' },
-  postAvatar: { width: 40, height: 40, borderRadius: 20, marginRight: 12 },
-  postUsername: { fontWeight: 'bold', fontSize: 16 },
-  postContent: { marginTop: 12, fontSize: 15, lineHeight: 20 },
+  postsContainer: {
+    padding: 10,
+  },
+  postCard: {
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    marginBottom: 15,
+    padding: 10,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  postHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  postAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    marginRight: 10,
+  },
+  postUsername: {
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  postContent: {
+    fontSize: 14,
+    marginBottom: 8,
+  },
   postImage: {
     width: '100%',
     height: 200,
-    borderRadius: 16,
-    marginTop: 12,
-    backgroundColor: '#eaeaea',
+    borderRadius: 8,
+    marginBottom: 8,
   },
-  commentsList: { marginTop: 12 },
-  commentContainer: {
-    flexDirection: 'row',
-    marginTop: 8,
-    paddingHorizontal: 12,
-  },
-  commentAvatar: { width: 28, height: 28, borderRadius: 14, marginRight: 10 },
-  commentBubble: {
-    backgroundColor: '#f1f1f1',
-    padding: 10,
-    borderRadius: 12,
-    flex: 1,
-  },
-  commentName: { fontWeight: 'bold' },
-  fab: {
-    position: 'absolute',
-    bottom: 30,
-    right: 30,
-    backgroundColor: '#007AFF',
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    justifyContent: 'center',
-    alignItems: 'center',
-    elevation: 6,
-  },
-  modalContainer: {
-    flex: 1,
-    backgroundColor: 'white',
-    paddingTop: 60,
-    paddingHorizontal: 20,
-  },
-  modalBack: { marginBottom: 20 },
-  modalTitle: { fontSize: 20, fontWeight: 'bold', marginBottom: 12 },
-  textInput: {
-    height: 120,
-    borderColor: '#ccc',
-    borderWidth: 1,
-    borderRadius: 12,
-    padding: 12,
-    textAlignVertical: 'top',
-  },
-  publishButton: {
-    backgroundColor: '#007AFF',
-    padding: 14,
-    borderRadius: 12,
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  publishText: { color: 'white', fontSize: 16, fontWeight: 'bold' },
-  profileInfo: { alignItems: 'center' },
-  profileAvatar: { width: 100, height: 100, borderRadius: 50, marginBottom: 16 },
-  profileName: { fontSize: 24, fontWeight: 'bold' },
-  profileBio: { marginTop: 8, color: '#555', fontSize: 16 },
   likeContainer: {
     flexDirection: 'row',
-    marginTop: 10,
+    alignItems: 'center',
+    marginBottom: 8,
   },
   likeButton: {
     flexDirection: 'row',
@@ -429,63 +397,150 @@ const styles = StyleSheet.create({
   },
   likeCount: {
     marginLeft: 6,
-    fontSize: 16,
-    color: '#555',
+    fontSize: 14,
+  },
+  commentsList: {
+    marginBottom: 8,
+  },
+  commentContainer: {
+    flexDirection: 'row',
+    marginBottom: 6,
+  },
+  commentAvatar: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    marginRight: 8,
+  },
+  commentBubble: {
+    backgroundColor: '#f0f0f0',
+    borderRadius: 15,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    maxWidth: '85%',
+  },
+  commentName: {
+    fontWeight: 'bold',
+    marginBottom: 2,
   },
   addCommentButton: {
-    marginTop: 12,
+    marginLeft: 48,
   },
   addCommentContainer: {
     flexDirection: 'row',
-    marginTop: 12,
     alignItems: 'center',
+    marginLeft: 48,
+    marginBottom: 8,
   },
   commentInput: {
     flex: 1,
-    borderColor: '#ccc',
     borderWidth: 1,
+    borderColor: '#ddd',
     borderRadius: 20,
     paddingHorizontal: 12,
     paddingVertical: 6,
     marginRight: 8,
-    height: 36,
+    fontSize: 14,
   },
   sendCommentButton: {
     padding: 6,
   },
-
+  fab: {
+    position: 'absolute',
+    bottom: 25,
+    right: 25,
+    backgroundColor: '#007AFF',
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 5,
+  },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  modalBack: {
+    padding: 15,
+  },
+  profileInfo: {
+    alignItems: 'center',
+    paddingVertical: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  profileAvatar: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    marginBottom: 10,
+  },
+  profileName: {
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  profileBio: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+    marginTop: 6,
+    paddingHorizontal: 20,
+  },
   profileButtonsContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginTop: 20,
-    marginBottom: 10,
-    width: '100%',
+    marginTop: 15,
   },
   profileButton: {
     backgroundColor: '#007AFF',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 25,
-    minWidth: 90,
-    alignItems: 'center',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+    marginHorizontal: 6,
   },
   profileButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
-    fontSize: 16,
+    color: '#fff',
+    fontSize: 14,
   },
-  profileButtonReport: {
-    backgroundColor: '#FF3B30',
+  createPostModalContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    paddingHorizontal: 20,
+  },
+  createPostModalContent: {
+    flex: 1,
+    justifyContent: 'center',
+    padding: 20,
+    backgroundColor: '#fff',
+  },
+  createPostTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  createPostInput: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 10,
+    padding: 12,
+    height: 120,
+    textAlignVertical: 'top',
+    fontSize: 16,
+    marginBottom: 20,
+  },
+  createPostButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  modalButton: {
     paddingVertical: 10,
     paddingHorizontal: 20,
-    borderRadius: 25,
-    minWidth: 90,
-    alignItems: 'center',
+    borderRadius: 8,
   },
-  profileButtonReportText: {
-    color: 'white',
-    fontWeight: 'bold',
-    fontSize: 16,
+  deleteButton: {
+    marginLeft: 10,
+    justifyContent: 'center',
   },
-
 });
