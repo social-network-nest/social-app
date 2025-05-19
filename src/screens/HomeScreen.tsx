@@ -249,11 +249,15 @@ export default function HomeScreen() {
       />
       {commentingPostId === item.id ? (
         <View style={styles.addCommentContainer}>
+          <Image
+            source={{ uri: 'https://i.pravatar.cc/150?img=10' }}
+            style={styles.commentAvatar}
+          />
           <TextInput
             placeholder="Escribe un comentario..."
             value={newCommentText}
             onChangeText={setNewCommentText}
-            style={styles.commentInput}
+            style={[styles.commentInput, { marginLeft: 8 }]}
           />
           <TouchableOpacity onPress={handleAddComment} style={styles.sendCommentButton}>
             <Ionicons name="send" size={24} color="#007AFF" />
@@ -424,23 +428,30 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   addCommentButton: {
-    marginLeft: 48,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
   },
   addCommentContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginLeft: 48,
-    marginBottom: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#ddd',
+    backgroundColor: '#fff',
   },
   commentInput: {
     flex: 1,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 20,
-    paddingHorizontal: 12,
+    marginLeft: 10,
+    marginRight: 10,
     paddingVertical: 6,
-    marginRight: 8,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 20,
+    backgroundColor: '#f9f9f9',
     fontSize: 14,
+    maxHeight: 80,
   },
   sendCommentButton: {
     padding: 6,
@@ -542,5 +553,21 @@ const styles = StyleSheet.create({
   deleteButton: {
     marginLeft: 10,
     justifyContent: 'center',
+  },
+  commentInputAvatar: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    marginRight: 8,
+  },
+
+  commentInputWithAvatar: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    fontSize: 14,
   },
 });
