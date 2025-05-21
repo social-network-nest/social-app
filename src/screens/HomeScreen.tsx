@@ -10,6 +10,8 @@ import {
   StyleSheet,
   ScrollView,
   SafeAreaView,
+  Animated,
+  Dimensions
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -133,6 +135,9 @@ export default function HomeScreen() {
   const [newPostContent, setNewPostContent] = useState('');
   const [newCommentText, setNewCommentText] = useState('');
   const [commentingPostId, setCommentingPostId] = useState<number | null>(null);
+  const [showSidebar, setShowSidebar] = useState(false);
+  const screenWidth = Dimensions.get('window').width;
+  const [sidebarAnim] = useState(new Animated.Value(screenWidth));
 
   const handleCreatePost = () => {
     if (!newPostContent.trim()) return;
@@ -194,6 +199,23 @@ export default function HomeScreen() {
 
   const handleDeletePost = (postId: number) => {
     setPosts(posts.filter(post => post.id !== postId));
+  };
+
+  const openSidebar = () => {
+    Animated.timing(sidebarAnim, {
+      toValue: 0, // Desliza hacia posición 0 (completo en pantalla)
+      duration: 300,
+      useNativeDriver: false,
+    }).start();
+    setShowSidebar(true);
+  };
+
+  const closeSidebar = () => {
+    Animated.timing(sidebarAnim, {
+      toValue: screenWidth, // Vuelve a salir hacia la derecha
+      duration: 300,
+      useNativeDriver: false,
+    }).start(() => setShowSidebar(false));
   };
 
   const renderComment = ({ item }: { item: Comment }) => (
@@ -278,6 +300,11 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <View style={{ padding: 10 }}>
+        <TouchableOpacity onPress={openSidebar}>
+          <Ionicons name="menu" size={30} color="#333" />
+        </TouchableOpacity>
+      </View>
       <FlatList
         data={posts}
         keyExtractor={(item) => item.id.toString()}
@@ -344,6 +371,38 @@ export default function HomeScreen() {
           </View>
         </SafeAreaView>
       </Modal>
+      {showSidebar && (
+        <SafeAreaView style={StyleSheet.absoluteFill}>
+          <TouchableOpacity
+            activeOpacity={1}
+            onPress={closeSidebar}
+            style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.3)' }}
+          >
+            <Animated.View
+              style={[
+                styles.sidebarRight,
+                {
+                  right: 0,
+                  transform: [{ translateX: sidebarAnim }],
+                },
+              ]}
+            >
+              <Text style={styles.sidebarTitle}>Menú</Text>
+              <TouchableOpacity onPress={() => {}} style={styles.sidebarItem}>
+                <Text>Inicio</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => {}} style={styles.sidebarItem}>
+                <Text>Mi Perfil</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => {}} style={styles.sidebarItem}>
+                <Text>Configuración</Text>
+              </TouchableOpacity>
+            </Animated.View>
+          </TouchableOpacity>
+        </SafeAreaView>
+      )}
+
+
     </SafeAreaView>
   );
 }
@@ -570,4 +629,45 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     fontSize: 14,
   },
+  sidebar: {
+    width: 250,
+    height: '100%',
+    backgroundColor: '#fff',
+    padding: 20,
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    shadowColor: '#000',
+    shadowOffset: { width: 2, height: 0 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 10,
+  },
+  sidebarTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 20,
+  },
+  sidebarItem: {
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  sidebarRight: {
+    position: 'absolute',
+    top: 0,
+    width: 250,
+    height: '100%',
+    backgroundColor: '#fff',
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: -2, height: 0 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 10,
+    zIndex: 100,
+  },
+
+
+
 });
