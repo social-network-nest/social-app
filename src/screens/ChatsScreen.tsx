@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,7 @@ import {
   Alert,
 } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 interface Chat {
   id: string;
@@ -17,130 +18,63 @@ interface Chat {
   lastMessage: string;
   timestamp: string;
   avatar: string;
+  unreadCount?: number;
 }
 
 const CHATS: Chat[] = [
   {
     id: '1',
-    user: 'Jamie Murcia',
-    lastMessage: 'Muy bien, gracias 😊',
-    timestamp: '12:45 PM',
-    avatar:
-      'https://images.unsplash.com/photo-1532274402911-5a369e4c4bb5?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+    user: 'Camila Torres',
+    lastMessage: '¿A qué hora quedamos mañana? ⏰',
+    timestamp: 'Hoy, 10:23 AM',
+    avatar: 'https://randomuser.me/api/portraits/women/21.jpg',
   },
   {
     id: '2',
-    user: 'Carlos Ruiz',
-    lastMessage: 'Gracias por tu ayuda.',
-    timestamp: '11:20 AM',
-    avatar: 'https://randomuser.me/api/portraits/men/0.jpg',
+    user: 'Sebastián Vargas',
+    lastMessage: 'Listo, te mandé los archivos 📎',
+    timestamp: 'Hoy, 9:15 AM',
+    avatar: 'https://randomuser.me/api/portraits/men/32.jpg',
   },
   {
     id: '3',
-    user: 'Lucía Fernández',
-    lastMessage: '¡Hablamos luego!',
-    timestamp: '9:00 AM',
-    avatar: 'https://randomuser.me/api/portraits/women/1.jpg',
+    user: 'Valentina Ríos',
+    lastMessage: '😂 jajaja no puedo creerlo',
+    timestamp: 'Ayer, 8:47 PM',
+    avatar: 'https://randomuser.me/api/portraits/women/45.jpg',
   },
   {
     id: '4',
-    user: 'Ana López',
-    lastMessage: '¿Nos vemos mañana?',
-    timestamp: '8:30 AM',
-    avatar: 'https://randomuser.me/api/portraits/women/2.jpg',
+    user: 'Julián Castro',
+    lastMessage: '¿Puedes revisar esto porfa? 🙏',
+    timestamp: 'Ayer, 6:10 PM',
+    avatar: 'https://randomuser.me/api/portraits/men/44.jpg',
   },
   {
     id: '5',
-    user: 'Pedro García',
-    lastMessage: 'Estoy esperando tu respuesta.',
-    timestamp: '7:55 AM',
-    avatar: 'https://randomuser.me/api/portraits/men/2.jpg',
-  },
-  {
-    id: '6',
-    user: 'Miguel Sánchez',
-    lastMessage: 'Ya te mandé la información.',
-    timestamp: '6:40 AM',
-    avatar: 'https://randomuser.me/api/portraits/men/3.jpg',
-  },
-  {
-    id: '7',
-    user: 'Julia Martínez',
-    lastMessage: '¡Buen trabajo! 👏',
-    timestamp: '5:25 AM',
-    avatar: 'https://randomuser.me/api/portraits/women/3.jpg',
-  },
-  {
-    id: '8',
-    user: 'David Rodríguez',
-    lastMessage: 'Vamos a vernos esta tarde.',
-    timestamp: '4:10 AM',
-    avatar: 'https://randomuser.me/api/portraits/men/4.jpg',
-  },
-  {
-    id: '9',
-    user: 'Laura Pérez',
-    lastMessage: '¡Te espero en el café!',
-    timestamp: '3:00 AM',
-    avatar: 'https://randomuser.me/api/portraits/women/4.jpg',
-  },
-  {
-    id: '10',
-    user: 'José Gómez',
-    lastMessage: 'Te llamo más tarde.',
-    timestamp: '2:30 AM',
-    avatar: 'https://randomuser.me/api/portraits/men/5.jpg',
-  },
-  {
-    id: '11',
-    user: 'Raquel Fernández',
-    lastMessage: '¿Cuándo es la reunión?',
-    timestamp: '1:15 AM',
-    avatar: 'https://randomuser.me/api/portraits/women/5.jpg',
-  },
-  {
-    id: '12',
-    user: 'Victor Castillo',
-    lastMessage: 'Estoy fuera de la oficina.',
-    timestamp: '12:00 AM',
-    avatar: 'https://randomuser.me/api/portraits/men/6.jpg',
-  },
-  {
-    id: '13',
-    user: 'Beatriz Ramos',
-    lastMessage: 'Nos vemos el próximo mes.',
-    timestamp: '11:30 PM',
-    avatar: 'https://randomuser.me/api/portraits/women/6.jpg',
-  },
-  {
-    id: '14',
-    user: 'Andrés Ruiz',
-    lastMessage: 'Lo resolví, gracias.',
-    timestamp: '10:45 PM',
-    avatar: 'https://randomuser.me/api/portraits/men/7.jpg',
+    user: 'Diana López',
+    lastMessage: 'Nos vemos en 5 minutos 🚶‍♀️',
+    timestamp: 'Ayer, 5:05 PM',
+    avatar: 'https://randomuser.me/api/portraits/women/65.jpg',
   },
 ];
 
 const ChatScreen = ({ navigation }: { navigation: any }) => {
-  const [searchText, setSearchText] = React.useState('');
-  const [chats, setChats] = React.useState(
+  const [searchText, setSearchText] = useState('');
+  const [chats, setChats] = useState(
     CHATS.map(chat => ({
       ...chat,
       unreadCount: Math.random() > 0.7 ? Math.floor(Math.random() * 5) + 1 : 0,
     }))
   );
 
-  // Ref para controlar el swipeable activo y cerrarlo si cancela la eliminación
-  const swipeableRefs = React.useRef(new Map<string, React.RefObject<Swipeable>>());
+  const swipeableRefs = useRef<Map<string, Swipeable>>(new Map());
 
   const closeSwipe = (id: string) => {
-    const ref = swipeableRefs.current.get(id);
-    if (ref && ref.current) {
-      ref.current.close();
-    }
+    const swipeRef = swipeableRefs.current.get(id);
+    swipeRef?.close();
   };
 
-  // Confirmar eliminación con alert
   const confirmDelete = (id: string, user: string) => {
     Alert.alert(
       'Eliminar chat',
@@ -156,13 +90,13 @@ const ChatScreen = ({ navigation }: { navigation: any }) => {
           style: 'destructive',
           onPress: () => {
             setChats(prev => prev.filter(chat => chat.id !== id));
+            swipeableRefs.current.delete(id);
           },
         },
       ]
     );
   };
 
-  // Botones que aparecen al hacer swipe
   const renderRightActions = (id: string, user: string) => (
     <View style={styles.rightActionContainer}>
       <TouchableOpacity
@@ -174,28 +108,24 @@ const ChatScreen = ({ navigation }: { navigation: any }) => {
     </View>
   );
 
-  // Render de cada chat (Swipeable con confirmación)
-  const renderItem = ({
-    item,
-  }: {
-    item: Chat & { unreadCount: number };
-  }) => {
+  const renderItem = ({ item }: { item: Chat }) => {
     return (
       <Swipeable
-        ref={swipeableRefs.current.get(item.id)}
+        ref={ref => {
+          if (ref) swipeableRefs.current.set(item.id, ref);
+        }}
         renderRightActions={() => renderRightActions(item.id, item.user)}
-        onSwipeableRightOpen={() => confirmDelete(item.id, item.user)}
       >
         <TouchableOpacity
           style={styles.chatCard}
-          onPress={() => navigation.navigate('Message', { user: item.user })}
+          onPress={() => navigation.navigate('Message', { user: item.user, avatar: item.avatar })}
         >
           <Image source={{ uri: item.avatar }} style={styles.avatar} />
           <View style={styles.chatInfo}>
             <View style={styles.chatHeader}>
               <Text style={styles.username}>{item.user}</Text>
-              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                {item.unreadCount > 0 && (
+              <View style={styles.rightHeader}>
+                {item.unreadCount! > 0 && (
                   <View style={styles.unreadBadge}>
                     <Text style={styles.unreadText}>{item.unreadCount}</Text>
                   </View>
@@ -212,15 +142,18 @@ const ChatScreen = ({ navigation }: { navigation: any }) => {
     );
   };
 
-  // Filtrado por búsqueda
-  const filteredChats = chats.filter(
-    chat =>
-      chat.user.toLowerCase().includes(searchText.toLowerCase()) ||
-      chat.lastMessage.toLowerCase().includes(searchText.toLowerCase())
+  const filteredChats = useMemo(
+    () =>
+      chats.filter(
+        chat =>
+          chat.user.toLowerCase().includes(searchText.toLowerCase()) ||
+          chat.lastMessage.toLowerCase().includes(searchText.toLowerCase())
+      ),
+    [searchText, chats]
   );
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <TextInput
         style={styles.searchInput}
         placeholder="Buscar chats..."
@@ -235,7 +168,7 @@ const ChatScreen = ({ navigation }: { navigation: any }) => {
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         keyboardShouldPersistTaps="handled"
       />
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -245,28 +178,29 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
-    paddingHorizontal: 10,
-    paddingTop: 10,
+    paddingHorizontal: 12,
+    // Padding adicional para asegurar espacio sobre el notch (barra de estado)
+    paddingTop: 20, // Ajusta el valor si es necesario
   },
   searchInput: {
-    height: 40,
+    height: 42,
     borderColor: '#ccc',
     borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    marginBottom: 10,
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    marginBottom: 12,
   },
   chatCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 12,
+    paddingVertical: 14,
     backgroundColor: '#fff',
   },
   avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 24,
-    marginRight: 12,
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    marginRight: 14,
   },
   chatInfo: {
     flex: 1,
@@ -276,9 +210,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
+  rightHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   username: {
     fontWeight: 'bold',
     fontSize: 16,
+    maxWidth: '60%',
   },
   timestamp: {
     fontSize: 12,
@@ -286,7 +225,7 @@ const styles = StyleSheet.create({
   },
   lastMessage: {
     fontSize: 14,
-    color: '#444',
+    color: '#555',
     marginTop: 4,
   },
   separator: {
@@ -304,28 +243,27 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   unreadText: {
-    color: 'white',
+    color: '#fff',
     fontWeight: 'bold',
     fontSize: 12,
-    textAlign: 'center',
   },
   rightActionContainer: {
-    flexDirection: 'row',
     width: 80,
-    justifyContent: 'flex-end',
-    alignItems: 'center',
+    justifyContent: 'center',
+    alignItems: 'flex-end',
+    backgroundColor: 'transparent',
   },
   actionButton: {
+    width: 80,
     justifyContent: 'center',
     alignItems: 'center',
-    width: 80,
     height: '100%',
   },
   deleteButton: {
     backgroundColor: '#FF3B30',
   },
   actionText: {
-    color: 'white',
+    color: '#fff',
     fontWeight: 'bold',
   },
 });

@@ -5,7 +5,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
-import { HomeScreen, ChatScreen, MessageScreen } from './src/screens';
+import { HomeScreen, ChatScreen, MessageScreen, ProfileScreen } from './src/screens';
 import 'react-native-gesture-handler';
 
 const Tab = createBottomTabNavigator();
@@ -31,6 +31,17 @@ function MyTabs() {
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="chatbubbles" size={size} color={color} />
           ),
+          headerShown: false,
+        }}
+      />
+      <Tab.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={{
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="person-circle" size={size} color={color} />
+          ),
+          headerShown: false,
         }}
       />
     </Tab.Navigator>
