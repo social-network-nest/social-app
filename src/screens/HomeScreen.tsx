@@ -138,6 +138,8 @@ export default function HomeScreen() {
   const [showSidebar, setShowSidebar] = useState(false);
   const screenWidth = Dimensions.get('window').width;
   const [sidebarAnim] = useState(new Animated.Value(screenWidth));
+  const [activeMenuOption, setActiveMenuOption] = useState<string | null>(null);
+  const [isMenuModalVisible, setIsMenuModalVisible] = useState(false);
 
   const handleCreatePost = () => {
     if (!newPostContent.trim()) return;
@@ -216,6 +218,12 @@ export default function HomeScreen() {
       duration: 300,
       useNativeDriver: false,
     }).start(() => setShowSidebar(false));
+  };
+
+  const handleMenuOptionPress = (option: string) => {
+    closeSidebar(); // Cierra el menú
+    setActiveMenuOption(option); // Guarda la opción seleccionada
+    setIsMenuModalVisible(true); // Muestra el modal
   };
 
   const renderComment = ({ item }: { item: Comment }) => (
@@ -388,21 +396,29 @@ export default function HomeScreen() {
               ]}
             >
               <Text style={styles.sidebarTitle}>Menú</Text>
-              <TouchableOpacity onPress={() => {}} style={styles.sidebarItem}>
-                <Text>Inicio</Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => {}} style={styles.sidebarItem}>
-                <Text>Mi Perfil</Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => {}} style={styles.sidebarItem}>
-                <Text>Configuración</Text>
-              </TouchableOpacity>
+                <TouchableOpacity onPress={() => handleMenuOptionPress('Inicio')} style={styles.sidebarItem}>
+                  <Text>Inicio</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => handleMenuOptionPress('Mi Perfil')} style={styles.sidebarItem}>
+                  <Text>Mi Perfil</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => handleMenuOptionPress('Configuración')} style={styles.sidebarItem}>
+                  <Text>Configuración</Text>
+                </TouchableOpacity>
             </Animated.View>
           </TouchableOpacity>
         </SafeAreaView>
       )}
-
-
+      <Modal visible={isMenuModalVisible} animationType="slide">
+        <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' }}>
+          <Text style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 20 }}>
+            {activeMenuOption}
+          </Text>
+          <TouchableOpacity onPress={() => setIsMenuModalVisible(false)} style={styles.modalButton}>
+            <Text style={{ color: 'white' }}>Cerrar</Text>
+          </TouchableOpacity>
+        </SafeAreaView>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -605,6 +621,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   modalButton: {
+    backgroundColor: '#007AFF',
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 8,
