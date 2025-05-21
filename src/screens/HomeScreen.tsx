@@ -684,7 +684,4 @@ const styles = StyleSheet.create({
     elevation: 10,
     zIndex: 100,
   },
-
-
-
 });
