@@ -8,9 +8,12 @@ import {
   TouchableOpacity,
   TextInput,
   Alert,
+  Modal,
+  Pressable,
 } from 'react-native';
-import { Swipeable } from 'react-native-gesture-handler';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ScrollView, Swipeable } from 'react-native-gesture-handler';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import Icon from 'react-native-vector-icons/Ionicons';
 
 interface Chat {
   id: string;
@@ -61,6 +64,13 @@ const CHATS: Chat[] = [
 
 const ChatScreen = ({ navigation }: { navigation: any }) => {
   const [searchText, setSearchText] = useState('');
+  const [isModalVisible, setModalVisible] = useState(false);
+
+  const openContactsModal = () => setModalVisible(true);
+  const closeContactsModal = () => setModalVisible(false);
+
+  const insets = useSafeAreaInsets();
+
   const [chats, setChats] = useState(
     CHATS.map(chat => ({
       ...chat,
@@ -154,13 +164,18 @@ const ChatScreen = ({ navigation }: { navigation: any }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <TextInput
-        style={styles.searchInput}
-        placeholder="Buscar chats..."
-        value={searchText}
-        onChangeText={setSearchText}
-        clearButtonMode="while-editing"
-      />
+      <View style={styles.searchBarContainer}>
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Buscar chats..."
+          value={searchText}
+          onChangeText={setSearchText}
+          clearButtonMode="while-editing"
+        />
+        <TouchableOpacity style={styles.iconButton} onPress={openContactsModal}>
+          <Icon name="people-outline" size={22} color="#007AFF" />
+        </TouchableOpacity>
+      </View>
       <FlatList
         data={filteredChats}
         keyExtractor={item => item.id}
@@ -168,6 +183,52 @@ const ChatScreen = ({ navigation }: { navigation: any }) => {
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         keyboardShouldPersistTaps="handled"
       />
+      <Modal
+        animationType="slide"
+        transparent={false}
+        visible={isModalVisible}
+        onRequestClose={closeContactsModal}
+      >
+        <View
+          style={[
+            styles.fullModalContainer,
+            {
+              paddingTop: insets.top,
+              paddingBottom: insets.bottom,
+            },
+          ]}
+        >
+          {/* Encabezado */}
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Contactos</Text>
+            <TouchableOpacity onPress={closeContactsModal}>
+              <Text style={styles.modalCloseText}>Cerrar</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Lista */}
+          <ScrollView contentContainerStyle={styles.contactList}>
+            {chats.map(contact => (
+              <TouchableOpacity
+                key={contact.id}
+                style={styles.contactItem}
+                onPress={() => {
+                  closeContactsModal();
+                  navigation.navigate('Message', {
+                    user: contact.user,
+                    avatar: contact.avatar,
+                  });
+                }}
+              >
+                <Image source={{ uri: contact.avatar }} style={styles.contactAvatar} />
+                <Text style={styles.contactName}>{contact.user}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+      </Modal>
+
+
     </SafeAreaView>
   );
 };
@@ -183,12 +244,14 @@ const styles = StyleSheet.create({
     paddingTop: 20, // Ajusta el valor si es necesario
   },
   searchInput: {
-    height: 42,
+    flex: 1,
+    height: 44,
+    backgroundColor: '#fff',
     borderColor: '#ccc',
     borderWidth: 1,
-    borderRadius: 10,
+    borderRadius: 12,
     paddingHorizontal: 14,
-    marginBottom: 12,
+    fontSize: 16,
   },
   chatCard: {
     flexDirection: 'row',
@@ -265,5 +328,88 @@ const styles = StyleSheet.create({
   actionText: {
     color: '#fff',
     fontWeight: 'bold',
+  },
+  contactsButton: {
+    backgroundColor: '#007AFF',
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  contactsButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  fullModalContainer: {
+    flex: 1,
+    backgroundColor: '#f8f9fa',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 10,
+    backgroundColor: '#ffffff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#ddd',
+  },
+  modalTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  modalCloseText: {
+    fontSize: 16,
+    color: '#007AFF',
+    fontWeight: '600',
+  },
+  contactList: {
+    paddingHorizontal: 20,
+    paddingTop: 10,
+  },
+  contactItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  contactAvatar: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    marginRight: 14,
+  },
+  contactName: {
+    fontSize: 16,
+    color: '#333',
+    fontWeight: '500',
+  },
+  searchBarContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  iconButton: {
+    width: 44,
+    height: 44,
+    marginLeft: 8,
+    backgroundColor: '#fff',
+    borderWidth: 2,
+    borderColor: '#007AFF',
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  iconText: {
+    fontSize: 20,
+    color: '#fff',
+  },
+  iconEmoji: {
+    fontSize: 20,
+    color: '#007AFF',
   },
 });
