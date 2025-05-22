@@ -14,7 +14,6 @@ import {
 import { ScrollView, Swipeable } from 'react-native-gesture-handler';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/Ionicons';
-
 interface Chat {
   id: string;
   user: string;
@@ -22,6 +21,7 @@ interface Chat {
   timestamp: string;
   avatar: string;
   unreadCount?: number;
+  status: string;
 }
 
 const CHATS: Chat[] = [
@@ -31,6 +31,7 @@ const CHATS: Chat[] = [
     lastMessage: '¿A qué hora quedamos mañana? ⏰',
     timestamp: 'Hoy, 10:23 AM',
     avatar: 'https://randomuser.me/api/portraits/women/21.jpg',
+    status: 'Disponible',
   },
   {
     id: '2',
@@ -38,6 +39,7 @@ const CHATS: Chat[] = [
     lastMessage: 'Listo, te mandé los archivos 📎',
     timestamp: 'Hoy, 9:15 AM',
     avatar: 'https://randomuser.me/api/portraits/men/32.jpg',
+    status: 'Disponible',
   },
   {
     id: '3',
@@ -45,6 +47,7 @@ const CHATS: Chat[] = [
     lastMessage: '😂 jajaja no puedo creerlo',
     timestamp: 'Ayer, 8:47 PM',
     avatar: 'https://randomuser.me/api/portraits/women/45.jpg',
+    status: 'Disponible',
   },
   {
     id: '4',
@@ -52,6 +55,7 @@ const CHATS: Chat[] = [
     lastMessage: '¿Puedes revisar esto porfa? 🙏',
     timestamp: 'Ayer, 6:10 PM',
     avatar: 'https://randomuser.me/api/portraits/men/44.jpg',
+    status: 'Disponible',
   },
   {
     id: '5',
@@ -59,12 +63,18 @@ const CHATS: Chat[] = [
     lastMessage: 'Nos vemos en 5 minutos 🚶‍♀️',
     timestamp: 'Ayer, 5:05 PM',
     avatar: 'https://randomuser.me/api/portraits/women/65.jpg',
+    status: 'Disponible',
   },
 ];
 
 const ChatScreen = ({ navigation }: { navigation: any }) => {
   const [searchText, setSearchText] = useState('');
   const [isModalVisible, setModalVisible] = useState(false);
+  const [searchContacto, setSearchContacto] = useState<string>('');
+
+  const contactosFiltrados = CHATS.filter((contact: Chat) =>
+    contact.user.toLowerCase().includes(searchContacto.toLowerCase())
+  );
 
   const openContactsModal = () => setModalVisible(true);
   const closeContactsModal = () => setModalVisible(false);
@@ -198,7 +208,7 @@ const ChatScreen = ({ navigation }: { navigation: any }) => {
             },
           ]}
         >
-          {/* Encabezado */}
+          {/* Header sin línea */}
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>Contactos</Text>
             <TouchableOpacity onPress={closeContactsModal}>
@@ -206,9 +216,19 @@ const ChatScreen = ({ navigation }: { navigation: any }) => {
             </TouchableOpacity>
           </View>
 
-          {/* Lista */}
+          {/* 🔍 Input de búsqueda */}
+          <View style={styles.modalSearchContainer}>
+            <TextInput
+              style={styles.modalSearchInput}
+              placeholder="Buscar contacto..."
+              value={searchContacto}
+              onChangeText={setSearchContacto}
+            />
+          </View>
+
+          {/* Lista filtrada */}
           <ScrollView contentContainerStyle={styles.contactList}>
-            {chats.map(contact => (
+            {contactosFiltrados.map((contact: Chat) => (
               <TouchableOpacity
                 key={contact.id}
                 style={styles.contactItem}
@@ -221,14 +241,17 @@ const ChatScreen = ({ navigation }: { navigation: any }) => {
                 }}
               >
                 <Image source={{ uri: contact.avatar }} style={styles.contactAvatar} />
-                <Text style={styles.contactName}>{contact.user}</Text>
+                <View>
+                  <Text style={styles.contactName}>{contact.user}</Text>
+                  {contact.status && (
+                    <Text style={styles.contactStatus}>{contact.status}</Text>
+                  )}
+                </View>
               </TouchableOpacity>
             ))}
           </ScrollView>
         </View>
       </Modal>
-
-
     </SafeAreaView>
   );
 };
@@ -353,8 +376,7 @@ const styles = StyleSheet.create({
     paddingTop: 20,
     paddingBottom: 10,
     backgroundColor: '#ffffff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#ddd',
+    // borderBottomWidth eliminado
   },
   modalTitle: {
     fontSize: 22,
@@ -411,5 +433,24 @@ const styles = StyleSheet.create({
   iconEmoji: {
     fontSize: 20,
     color: '#007AFF',
+  },
+  modalSearchContainer: {
+    paddingHorizontal: 20,
+    paddingBottom: 10,
+    backgroundColor: '#fff',
+  },
+  modalSearchInput: {
+    height: 42,
+    backgroundColor: '#f0f0f0',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    fontSize: 16,
+    borderWidth: 1,
+    borderColor: '#ccc',
+  },
+  contactStatus: {
+    fontSize: 13,
+    color: '#777',
+    marginTop: 2,
   },
 });
