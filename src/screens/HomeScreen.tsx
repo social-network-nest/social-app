@@ -421,25 +421,28 @@ export default function HomeScreen() {
               ]}
             >
               <Text style={styles.sidebarTitle}>Menú</Text>
-                <TouchableOpacity onPress={() => handleMenuOptionPress('Mis Asignaturas')} style={styles.sidebarItem}>
-                  <Ionicons name="book-outline" size={22} color="#333" style={styles.sidebarIcon} />
-                  <Text style={styles.sidebarText}>Mis Asignaturas</Text>
-                </TouchableOpacity>
+              <TouchableOpacity onPress={() => handleMenuOptionPress('Mis Asignaturas')} style={styles.sidebarItem}>
+                <Ionicons name="book-outline" size={22} color="#333" style={styles.sidebarIcon} />
+                <Text style={styles.sidebarText}>Mis Asignaturas</Text>
+              </TouchableOpacity>
 
-                <TouchableOpacity onPress={() => handleMenuOptionPress('Notas')} style={styles.sidebarItem}>
-                  <Ionicons name="document-text-outline" size={22} color="#333" style={styles.sidebarIcon} />
-                  <Text style={styles.sidebarText}>Notas</Text>
-                </TouchableOpacity>
+              <TouchableOpacity onPress={() => handleMenuOptionPress('Notas')} style={styles.sidebarItem}>
+                <Ionicons name="document-text-outline" size={22} color="#333" style={styles.sidebarIcon} />
+                <Text style={styles.sidebarText}>Notas</Text>
+              </TouchableOpacity>
 
-                <TouchableOpacity onPress={() => handleMenuOptionPress('Asistencias')} style={styles.sidebarItem}>
-                  <Ionicons name="checkmark-done-outline" size={22} color="#333" style={styles.sidebarIcon} />
-                  <Text style={styles.sidebarText}>Asistencias</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity onPress={() => handleMenuOptionPress('Calendarios')} style={styles.sidebarItem}>
-                  <Ionicons name="calendar-outline" size={22} color="#333" style={styles.sidebarIcon} />
-                  <Text style={styles.sidebarText}>Calendarios</Text>
-                </TouchableOpacity>
+              <TouchableOpacity onPress={() => handleMenuOptionPress('Asistencias')} style={styles.sidebarItem}>
+                <Ionicons name="checkmark-done-outline" size={22} color="#333" style={styles.sidebarIcon} />
+                <Text style={styles.sidebarText}>Asistencias</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => handleMenuOptionPress('Anotaciones')} style={styles.sidebarItem}>
+                <Ionicons name="create-outline" size={22} color="#333" style={styles.sidebarIcon} />
+                <Text style={styles.sidebarText}>Anotaciones</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => handleMenuOptionPress('Calendarios')} style={styles.sidebarItem}>
+                <Ionicons name="calendar-outline" size={22} color="#333" style={styles.sidebarIcon} />
+                <Text style={styles.sidebarText}>Calendarios</Text>
+              </TouchableOpacity>
             </Animated.View>
           </TouchableOpacity>
         </SafeAreaView>
@@ -697,6 +700,75 @@ export default function HomeScreen() {
                     <View style={styles.eventTextContainer}>
                       <Text style={styles.eventTitle}>Prueba de Historia</Text>
                       <Text style={styles.eventDate}>Miércoles - 10:00 AM</Text>
+                    </View>
+                  </View>
+                </View>
+              </View>
+            )}
+            {activeMenuOption === 'Anotaciones' && (
+              <View style={styles.card}>
+                <Text style={styles.sectionTitle}>📒 Anotaciones del Estudiante</Text>
+
+                {/* Anotaciones Positivas */}
+                <View style={styles.eventContainer}>
+                  <Text style={[styles.subsectionTitle, { color: '#2e7d32' }]}>😊 Anotaciones Positivas</Text>
+
+                  <View style={styles.eventDetail}>
+                    <Text style={styles.eventIcon}>✅</Text>
+                    <View style={styles.eventTextContainer}>
+                      <Text style={styles.eventTitle}>Participación Destacada</Text>
+                      <Text style={styles.eventDate}>15 Mayo - Lenguaje</Text>
+                      <Text style={styles.eventDescription}>Participó activamente en clase con ideas claras y bien expresadas.</Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.eventDetail}>
+                    <Text style={styles.eventIcon}>🌟</Text>
+                    <View style={styles.eventTextContainer}>
+                      <Text style={styles.eventTitle}>Trabajo en Equipo</Text>
+                      <Text style={styles.eventDate}>17 Mayo - Ciencias</Text>
+                      <Text style={styles.eventDescription}>Colaboró de manera excelente con su grupo durante el experimento.</Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.eventDetail}>
+                    <Text style={styles.eventIcon}>🎉</Text>
+                    <View style={styles.eventTextContainer}>
+                      <Text style={styles.eventTitle}>Actitud Positiva</Text>
+                      <Text style={styles.eventDate}>20 Mayo - Tutoría</Text>
+                      <Text style={styles.eventDescription}>Mostró disposición y respeto hacia sus compañeros y docentes.</Text>
+                    </View>
+                  </View>
+                </View>
+
+                {/* Anotaciones Negativas */}
+                <View style={styles.eventContainer}>
+                  <Text style={[styles.subsectionTitle, { color: '#c62828' }]}>⚠️ Anotaciones Negativas</Text>
+
+                  <View style={styles.eventDetail}>
+                    <Text style={styles.eventIcon}>🚫</Text>
+                    <View style={styles.eventTextContainer}>
+                      <Text style={styles.eventTitle}>Tarea Incompleta</Text>
+                      <Text style={styles.eventDate}>13 Mayo - Matemáticas</Text>
+                      <Text style={styles.eventDescription}>No entregó la tarea asignada y no justificó su inasistencia.</Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.eventDetail}>
+                    <Text style={styles.eventIcon}>❗</Text>
+                    <View style={styles.eventTextContainer}>
+                      <Text style={styles.eventTitle}>Distracción en Clase</Text>
+                      <Text style={styles.eventDate}>18 Mayo - Historia</Text>
+                      <Text style={styles.eventDescription}>Estuvo usando el celular durante la clase sin autorización.</Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.eventDetail}>
+                    <Text style={styles.eventIcon}>⚠️</Text>
+                    <View style={styles.eventTextContainer}>
+                      <Text style={styles.eventTitle}>Falta de Respeto</Text>
+                      <Text style={styles.eventDate}>21 Mayo - Educación Física</Text>
+                      <Text style={styles.eventDescription}>Interrumpió constantemente al docente y a sus compañeros.</Text>
                     </View>
                   </View>
                 </View>
