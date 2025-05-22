@@ -140,6 +140,8 @@ export default function HomeScreen() {
   const [sidebarAnim] = useState(new Animated.Value(screenWidth));
   const [activeMenuOption, setActiveMenuOption] = useState<string | null>(null);
   const [isMenuModalVisible, setIsMenuModalVisible] = useState(false);
+  const [isSubjectPostsModalVisible, setIsSubjectPostsModalVisible] = useState(false);
+  const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
 
   const handleCreatePost = () => {
     if (!newPostContent.trim()) return;
@@ -225,6 +227,29 @@ export default function HomeScreen() {
     setActiveMenuOption(option); // Guarda la opción seleccionada
     setIsMenuModalVisible(true); // Muestra el modal
   };
+
+  const openSubjectPostsModal = (subjectName: string) => {
+    setSelectedSubject(subjectName);
+    setIsMenuModalVisible(false); // Cierra el modal de asignaturas
+
+    // Abrir el modal de publicaciones con pequeño delay para evitar el "salto"
+    setTimeout(() => {
+      setIsSubjectPostsModalVisible(true);
+    }, 300); // Ajusta el tiempo si es necesario
+  };
+
+  const closeSubjectPostsModal = () => {
+    // Cerrar el modal de publicaciones
+    setIsSubjectPostsModalVisible(false);
+
+    // Usamos otro timeout para esperar a que el modal de publicaciones se cierre completamente
+    setTimeout(() => {
+      // Abrir el modal de asignaturas después de un pequeño retraso
+      setIsMenuModalVisible(true); // Vuelve a abrir el modal de asignaturas
+      setActiveMenuOption('Mis Asignaturas'); // Resetea la opción activa del menú
+    }, 300); // Este tiempo debería ser lo suficientemente largo para que la animación de cierre se complete
+  };
+
 
   const renderComment = ({ item }: { item: Comment }) => (
     <View style={styles.commentContainer}>
@@ -396,27 +421,332 @@ export default function HomeScreen() {
               ]}
             >
               <Text style={styles.sidebarTitle}>Menú</Text>
-                <TouchableOpacity onPress={() => handleMenuOptionPress('Inicio')} style={styles.sidebarItem}>
-                  <Text>Inicio</Text>
+                <TouchableOpacity onPress={() => handleMenuOptionPress('Mis Asignaturas')} style={styles.sidebarItem}>
+                  <Ionicons name="book-outline" size={22} color="#333" style={styles.sidebarIcon} />
+                  <Text style={styles.sidebarText}>Mis Asignaturas</Text>
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => handleMenuOptionPress('Mi Perfil')} style={styles.sidebarItem}>
-                  <Text>Mi Perfil</Text>
+
+                <TouchableOpacity onPress={() => handleMenuOptionPress('Notas')} style={styles.sidebarItem}>
+                  <Ionicons name="document-text-outline" size={22} color="#333" style={styles.sidebarIcon} />
+                  <Text style={styles.sidebarText}>Notas</Text>
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => handleMenuOptionPress('Configuración')} style={styles.sidebarItem}>
-                  <Text>Configuración</Text>
+
+                <TouchableOpacity onPress={() => handleMenuOptionPress('Asistencias')} style={styles.sidebarItem}>
+                  <Ionicons name="checkmark-done-outline" size={22} color="#333" style={styles.sidebarIcon} />
+                  <Text style={styles.sidebarText}>Asistencias</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity onPress={() => handleMenuOptionPress('Calendarios')} style={styles.sidebarItem}>
+                  <Ionicons name="calendar-outline" size={22} color="#333" style={styles.sidebarIcon} />
+                  <Text style={styles.sidebarText}>Calendarios</Text>
                 </TouchableOpacity>
             </Animated.View>
           </TouchableOpacity>
         </SafeAreaView>
       )}
       <Modal visible={isMenuModalVisible} animationType="slide">
-        <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' }}>
-          <Text style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 20 }}>
-            {activeMenuOption}
-          </Text>
-          <TouchableOpacity onPress={() => setIsMenuModalVisible(false)} style={styles.modalButton}>
-            <Text style={{ color: 'white' }}>Cerrar</Text>
-          </TouchableOpacity>
+        <SafeAreaView style={styles.modalContent}>
+          {/* Header del Modal */}
+          <View style={styles.modalHeader}>
+            <TouchableOpacity onPress={() => setIsMenuModalVisible(false)} style={styles.backButton}>
+              <View style={styles.arrowButtonContainer}>
+                <Ionicons name="arrow-back" size={28} color="#007AFF" />
+              </View>
+            </TouchableOpacity>
+            <Text style={styles.modalTitle}>{activeMenuOption}</Text>
+          </View>
+
+          {/* Contenido del Modal */}
+          <ScrollView contentContainerStyle={styles.scrollContainer}>
+            {/* Mis Asignaturas */}
+            {activeMenuOption === 'Mis Asignaturas' && (
+              <View style={styles.card}>
+                <Text style={styles.sectionTitle}>Asignaturas Inscritas:</Text>
+
+                {/* Asignatura Matemáticas */}
+                <View style={styles.noteContainer}>
+                  <TouchableOpacity onPress={() => openSubjectPostsModal('Matemáticas')}>
+                    <Text style={styles.noteItem}>📘 <Text style={styles.subject}>Matemáticas</Text></Text>
+                  </TouchableOpacity>
+                  <View style={styles.detailContainer}>
+                    <Text style={styles.detail}>👨‍🏫 Profesor: Prof. Juan Pérez</Text>
+                    <Text style={styles.detail}>📅 Horarios:</Text>
+                    <Text style={styles.detail}>- Lunes: 8:00 AM a 10:00 AM</Text>
+                    <Text style={styles.detail}>- Martes: 9:00 AM a 11:00 AM</Text>
+                    <Text style={styles.detail}>- Miércoles: 8:00 AM a 10:00 AM</Text>
+                  </View>
+                </View>
+
+                {/* Asignatura Historia */}
+                <View style={styles.noteContainer}>
+                  <TouchableOpacity onPress={() => openSubjectPostsModal('Historia')}>
+                    <Text style={styles.noteItem}>📗 <Text style={styles.subject}>Historia</Text></Text>
+                  </TouchableOpacity>
+                  <View style={styles.detailContainer}>
+                    <Text style={styles.detail}>👨‍🏫 Profesor: Prof. Laura Gómez</Text>
+                    <Text style={styles.detail}>📅 Horarios:</Text>
+                    <Text style={styles.detail}>- Lunes: 10:30 AM a 12:30 PM</Text>
+                    <Text style={styles.detail}>- Jueves: 9:00 AM a 11:00 AM</Text>
+                  </View>
+                </View>
+
+                {/* Asignatura Ciencias */}
+                <View style={styles.noteContainer}>
+                  <TouchableOpacity onPress={() => openSubjectPostsModal('Ciencias')}>
+                    <Text style={styles.noteItem}>📙 <Text style={styles.subject}>Ciencias</Text></Text>
+                  </TouchableOpacity>
+                  <View style={styles.detailContainer}>
+                    <Text style={styles.detail}>👨‍🏫 Profesor: Prof. Manuel Rodríguez</Text>
+                    <Text style={styles.detail}>📅 Horarios:</Text>
+                    <Text style={styles.detail}>- Martes: 2:00 PM a 4:00 PM</Text>
+                    <Text style={styles.detail}>- Viernes: 3:00 PM a 5:00 PM</Text>
+                  </View>
+                </View>
+
+                {/* Asignatura Lenguaje */}
+                <View style={styles.noteContainer}>
+                  <TouchableOpacity onPress={() => openSubjectPostsModal('Lenguaje')}>
+                    <Text style={styles.noteItem}>📕 <Text style={styles.subject}>Lenguaje</Text></Text>
+                  </TouchableOpacity>
+                  <View style={styles.detailContainer}>
+                    <Text style={styles.detail}>👨‍🏫 Profesor: Prof. Sandra Molina</Text>
+                    <Text style={styles.detail}>📅 Horarios:</Text>
+                    <Text style={styles.detail}>- Miércoles: 9:00 AM a 11:00 AM</Text>
+                    <Text style={styles.detail}>- Viernes: 10:00 AM a 12:00 PM</Text>
+                  </View>
+                </View>
+              </View>
+            )}
+
+            {/* Notas con Detalles */}
+            {activeMenuOption === 'Notas' && (
+              <View style={styles.card}>
+                <Text style={styles.sectionTitle}>Notas:</Text>
+
+                {/* Notas de Matemáticas */}
+                <View style={styles.noteContainer}>
+                  <Text style={styles.noteItem}>📘 <Text style={styles.subject}>Matemáticas:</Text></Text>
+                  <View style={styles.detailContainer}>
+                    <Text style={styles.detail}>📝 Examen Final: 7.0</Text>
+                    <Text style={styles.detail}>📚 Tareas: 6.5</Text>
+                    <Text style={styles.detail}>👨‍🏫 Participación: 6.0</Text>
+                    <Text style={styles.detail}>🔄 Recuperación: 6.8</Text>
+                  </View>
+                </View>
+
+                {/* Notas de Historia */}
+                <View style={styles.noteContainer}>
+                  <Text style={styles.noteItem}>📗 <Text style={styles.subject}>Historia:</Text></Text>
+                  <View style={styles.detailContainer}>
+                    <Text style={styles.detail}>📝 Examen Final: 6.5</Text>
+                    <Text style={styles.detail}>📚 Tareas: 7.0</Text>
+                    <Text style={styles.detail}>👨‍🏫 Participación: 6.8</Text>
+                    <Text style={styles.detail}>🔄 Recuperación: 7.0</Text>
+                  </View>
+                </View>
+
+                {/* Notas de Ciencias */}
+                <View style={styles.noteContainer}>
+                  <Text style={styles.noteItem}>📙 <Text style={styles.subject}>Ciencias:</Text></Text>
+                  <View style={styles.detailContainer}>
+                    <Text style={styles.detail}>📝 Examen Final: 5.8</Text>
+                    <Text style={styles.detail}>📚 Tareas: 5.5</Text>
+                    <Text style={styles.detail}>👨‍🏫 Participación: 6.0</Text>
+                    <Text style={styles.detail}>🔄 Recuperación: 6.0</Text>
+                  </View>
+                </View>
+
+                {/* Notas de Lenguaje */}
+                <View style={styles.noteContainer}>
+                  <Text style={styles.noteItem}>📕 <Text style={styles.subject}>Lenguaje:</Text></Text>
+                  <View style={styles.detailContainer}>
+                    <Text style={styles.detail}>📝 Examen Final: 7.0</Text>
+                    <Text style={styles.detail}>📚 Tareas: 6.5</Text>
+                    <Text style={styles.detail}>👨‍🏫 Participación: 6.2</Text>
+                    <Text style={styles.detail}>🔄 Recuperación: 6.8</Text>
+                  </View>
+                </View>
+
+                {/* Promedio de todas las asignaturas */}
+                <Text style={styles.average}>Promedio: 6.7</Text>
+              </View>
+            )}
+
+            {/* Asistencias */}
+            {activeMenuOption === 'Asistencias' && (
+              <View style={styles.card}>
+                <Text style={styles.sectionTitle}>Resumen de Asistencias:</Text>
+
+                {/* Resumen General de Asistencias */}
+                <View style={styles.attendanceContainer}>
+                  <Text style={styles.attendanceDetail}>✅ Asistencias: <Text style={styles.attendanceValue}>42</Text></Text>
+                  <Text style={styles.attendanceDetail}>❌ Ausencias: <Text style={styles.attendanceValue}>3</Text></Text>
+                  <Text style={styles.attendanceDetail}>⏳ Atrasos: <Text style={styles.attendanceValue}>2</Text></Text>
+                </View>
+
+                {/* Resumen Semanal de Asistencias */}
+                <Text style={styles.sectionTitle}>Asistencias por Semana:</Text>
+
+                <View style={styles.weeklyAttendance}>
+                  {/* Semana 1 */}
+                  <View style={styles.weekContainer}>
+                    <Text style={styles.weekTitle}>Semana 1 (1-7 Mayo)</Text>
+                    <Text style={styles.weekDetail}>✅ Lunes: Asistió</Text>
+                    <Text style={styles.weekDetail}>✅ Martes: Asistió</Text>
+                    <Text style={styles.weekDetail}>❌ Miércoles: Ausente</Text>
+                    <Text style={styles.weekDetail}>✅ Jueves: Asistió</Text>
+                    <Text style={styles.weekDetail}>✅ Viernes: Asistió</Text>
+                  </View>
+
+                  {/* Semana 2 */}
+                  <View style={styles.weekContainer}>
+                    <Text style={styles.weekTitle}>Semana 2 (8-14 Mayo)</Text>
+                    <Text style={styles.weekDetail}>✅ Lunes: Asistió</Text>
+                    <Text style={styles.weekDetail}>✅ Martes: Asistió</Text>
+                    <Text style={styles.weekDetail}>✅ Miércoles: Asistió</Text>
+                    <Text style={styles.weekDetail}>✅ Jueves: Asistió</Text>
+                    <Text style={styles.weekDetail}>❌ Viernes: Ausente</Text>
+                  </View>
+                </View>
+              </View>
+            )}
+
+            {/* Calendarios */}
+            {activeMenuOption === 'Calendarios' && (
+              <View style={styles.card}>
+                <Text style={styles.sectionTitle}>Calendario Académico:</Text>
+
+                {/* Eventos del Mes */}
+                <View style={styles.eventContainer}>
+                  <Text style={styles.subsectionTitle}>Eventos del Mes:</Text>
+
+                  <View style={styles.eventDetail}>
+                    <Text style={styles.eventIcon}>🗓️</Text>
+                    <View style={styles.eventTextContainer}>
+                      <Text style={styles.eventTitle}>Prueba de Matemáticas</Text>
+                      <Text style={styles.eventDate}>10 Mayo - 9:00 AM</Text>
+                      <Text style={styles.eventDescription}>Examen Final de Matemáticas. Prepararse con ejercicios de álgebra y geometría.</Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.eventDetail}>
+                    <Text style={styles.eventIcon}>🗓️</Text>
+                    <View style={styles.eventTextContainer}>
+                      <Text style={styles.eventTitle}>Día del Estudiante</Text>
+                      <Text style={styles.eventDate}>15 Mayo - Todo el día</Text>
+                      <Text style={styles.eventDescription}>Actividades recreativas y conmemorativas. No se tendrá clases este día.</Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.eventDetail}>
+                    <Text style={styles.eventIcon}>🗓️</Text>
+                    <View style={styles.eventTextContainer}>
+                      <Text style={styles.eventTitle}>Entrega de Trabajos</Text>
+                      <Text style={styles.eventDate}>25 Mayo - 3:00 PM</Text>
+                      <Text style={styles.eventDescription}>Entrega de trabajos de Ciencias y Lenguaje. Revisa las instrucciones en los documentos compartidos.</Text>
+                    </View>
+                  </View>
+                </View>
+
+                {/* Actividades Extracurriculares */}
+                <View style={styles.eventContainer}>
+                  <Text style={styles.subsectionTitle}>Actividades Extracurriculares:</Text>
+
+                  <View style={styles.eventDetail}>
+                    <Text style={styles.eventIcon}>🎨</Text>
+                    <View style={styles.eventTextContainer}>
+                      <Text style={styles.eventTitle}>Club de Arte</Text>
+                      <Text style={styles.eventDate}>Miércoles - 4:00 PM</Text>
+                      <Text style={styles.eventDescription}>Clase de pintura, cerámica y escultura. ¡Todos son bienvenidos!</Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.eventDetail}>
+                    <Text style={styles.eventIcon}>⚽</Text>
+                    <View style={styles.eventTextContainer}>
+                      <Text style={styles.eventTitle}>Fútbol - Equipo Escolar</Text>
+                      <Text style={styles.eventDate}>Lunes y Jueves - 5:00 PM</Text>
+                      <Text style={styles.eventDescription}>Entrenamiento del equipo de fútbol. ¡Ven a entrenar para el torneo intercolegial!</Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.eventDetail}>
+                    <Text style={styles.eventIcon}>🎶</Text>
+                    <View style={styles.eventTextContainer}>
+                      <Text style={styles.eventTitle}>Coral Escolar</Text>
+                      <Text style={styles.eventDate}>Martes - 4:00 PM</Text>
+                      <Text style={styles.eventDescription}>Prácticas para el concierto de fin de curso.</Text>
+                    </View>
+                  </View>
+                </View>
+
+                {/* Próximos Eventos de la Semana */}
+                <View style={styles.eventContainer}>
+                  <Text style={styles.subsectionTitle}>Próximos Eventos de la Semana:</Text>
+
+                  <View style={styles.eventDetail}>
+                    <Text style={styles.eventIcon}>🗓️</Text>
+                    <View style={styles.eventTextContainer}>
+                      <Text style={styles.eventTitle}>Entrega de Tareas - Lenguaje</Text>
+                      <Text style={styles.eventDate}>Martes - 5:00 PM</Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.eventDetail}>
+                    <Text style={styles.eventIcon}>🗓️</Text>
+                    <View style={styles.eventTextContainer}>
+                      <Text style={styles.eventTitle}>Prueba de Historia</Text>
+                      <Text style={styles.eventDate}>Miércoles - 10:00 AM</Text>
+                    </View>
+                  </View>
+                </View>
+              </View>
+            )}
+          </ScrollView>
+        </SafeAreaView>
+      </Modal>
+
+      {/* Modal de Publicaciones */}
+      <Modal visible={isSubjectPostsModalVisible} animationType="slide" transparent={true}>
+        <SafeAreaView style={styles.modalContent}>
+          <View style={styles.modalHeader}>
+            <TouchableOpacity onPress={closeSubjectPostsModal} style={styles.backButton}>
+              <View style={styles.arrowButtonContainer}>
+                <Ionicons name="arrow-back" size={28} color="#007AFF" />
+              </View>
+            </TouchableOpacity>
+            <Text style={styles.modalTitle}>{selectedSubject}</Text>
+          </View>
+
+          <ScrollView contentContainerStyle={styles.scrollContainer}>
+            <View style={styles.card}>
+              <Text style={styles.sectionTitle}>📝 Últimas publicaciones</Text>
+
+              <View style={styles.publicationItem}>
+                <Text style={styles.publicationIcon}>📢</Text>
+                <View style={styles.publicationTextContainer}>
+                  <Text style={styles.publicationTitle}>Tarea para el viernes</Text>
+                  <Text style={styles.publicationSubtitle}>No olvides entregar el ejercicio 4 antes del viernes a las 18:00 hrs.</Text>
+                </View>
+              </View>
+
+              <View style={styles.publicationItem}>
+                <Text style={styles.publicationIcon}>📚</Text>
+                <View style={styles.publicationTextContainer}>
+                  <Text style={styles.publicationTitle}>Material de estudio</Text>
+                  <Text style={styles.publicationSubtitle}>Ya está disponible el nuevo PDF sobre geometría en la sección de recursos.</Text>
+                </View>
+              </View>
+
+              <View style={styles.publicationItem}>
+                <Text style={styles.publicationIcon}>🧪</Text>
+                <View style={styles.publicationTextContainer}>
+                  <Text style={styles.publicationTitle}>Revisión de pruebas</Text>
+                  <Text style={styles.publicationSubtitle}>La revisión de la prueba será el miércoles durante la clase habitual.</Text>
+                </View>
+              </View>
+            </View>
+          </ScrollView>
         </SafeAreaView>
       </Modal>
     </SafeAreaView>
@@ -666,6 +996,8 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   sidebarItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
@@ -683,5 +1015,201 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 10,
     zIndex: 100,
+  },
+  sidebarIcon: {
+    marginRight: 10,
+  },
+  sidebarText: {
+    fontSize: 16,
+    color: '#333',
+  },
+  modalContent: {
+    flex: 1,
+    backgroundColor: '#f7f7f7',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#007AFF',  // Azul más oscuro
+    paddingVertical: 15,  // Reducir el padding para que el header no sea tan ancho
+    paddingHorizontal: 20,  // Ajustar el ancho del header
+    borderTopLeftRadius: 30,  // Bordes redondeados hacia arriba
+    borderTopRightRadius: 30,  // Bordes redondeados hacia arriba
+    elevation: 5,
+  },
+  backButton: {
+    marginLeft: 10,
+  },
+  arrowButtonContainer: {
+    backgroundColor: '#fff',
+    borderRadius: 25,  // Fondo redondo para la flecha
+    padding: 8,
+    elevation: 3,  // Sombra para resaltar el botón
+  },
+  modalTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginLeft: 15,
+  },
+  scrollContainer: {
+    padding: 20,
+  },
+  card: {
+    backgroundColor: '#fff',  // Fondo gris claro
+    borderRadius: 10,
+    padding: 15,
+    marginBottom: 15,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 15,
+  },
+  sectionItem: {
+    fontSize: 16,
+    marginVertical: 5,
+  },
+  noteContainer: {
+    marginBottom: 10,
+  },
+  noteItem: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 5,
+  },
+  detailContainer: {
+    marginLeft: 20,
+  },
+  detail: {
+    fontSize: 14,
+    color: '#555',
+    marginBottom: 5,
+  },
+  average: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#007AFF',
+    marginTop: 20,
+  },
+  subject: {
+    fontWeight: 'bold',
+    fontSize: 16,
+    color: '#007AFF', // color azul
+  },
+  attendanceContainer: {
+    backgroundColor: '#E8F6FF', // Fondo azul suave
+    padding: 15,
+    borderRadius: 10,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#A3D4FF', // Bordes azul claro
+    elevation: 3,
+  },
+
+  attendanceDetail: {
+    fontSize: 16,
+    color: '#2C3E50', // Texto oscuro
+    marginBottom: 10,
+  },
+
+  attendanceValue: {
+    fontWeight: 'bold',
+    color: '#007AFF', // Azul para resaltar los números
+  },
+
+  weeklyAttendance: {
+    marginTop: 10,
+  },
+
+  weekContainer: {
+    backgroundColor: '#F0F8FF', // Fondo más claro para las semanas
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 15,
+  },
+
+  weekTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#2C3E50',
+    marginBottom: 10,
+  },
+
+  weekDetail: {
+    fontSize: 16,
+    color: '#555',
+    marginBottom: 5,
+  },
+  eventContainer: {
+    marginBottom: 20,
+    paddingHorizontal: 15,
+  },
+  subsectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 10,
+  },
+  eventDetail: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: '#F1F8FF', // Fondo claro para cada evento
+    padding: 15,
+    borderRadius: 10,
+    marginBottom: 10,
+    elevation: 3,  // Sombra suave para darle profundidad
+  },
+  eventIcon: {
+    fontSize: 24,
+    color: '#007AFF',  // Iconos azules para eventos importantes
+    marginRight: 10,
+  },
+  eventTextContainer: {
+    flex: 1,
+  },
+  eventTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#2C3E50',
+    marginBottom: 5,
+  },
+  eventDate: {
+    fontSize: 14,
+    color: '#7F8C8D',
+    marginBottom: 5,
+  },
+  eventDescription: {
+    fontSize: 14,
+    color: '#34495E',
+  },
+    publicationItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 16,
+    padding: 10,
+    backgroundColor: '#ffffff',
+    borderRadius: 10,
+    elevation: 1,
+  },
+  publicationIcon: {
+    fontSize: 22,
+    marginRight: 12,
+    marginTop: 4,
+  },
+  publicationTextContainer: {
+    flex: 1,
+  },
+  publicationTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#007AFF',
+    marginBottom: 4,
+  },
+  publicationSubtitle: {
+    fontSize: 14,
+    color: '#555',
+    lineHeight: 20,
   },
 });
