@@ -27,6 +27,51 @@ const dummyData: Message[] = [
   { id: '4', message: 'Muy bien, gracias por preguntar.', sender: 'me' },
 ];
 
+// --- COMPONENTES INTERNOS ---
+const HeaderTitle = ({ avatar, user }: { avatar: string; user: string }) => (
+  <View style={styles.headerTitleContainer}>
+    <Image source={{ uri: avatar }} style={styles.headerAvatar} />
+    <Text style={styles.headerUsername}>{user}</Text>
+  </View>
+);
+
+const MessageBubble = ({ message, sender }: { message: string; sender: 'me' | 'other' }) => (
+  <View
+    style={[
+      styles.messageBubble,
+      sender === 'me' ? styles.myMessage : styles.otherMessage,
+    ]}
+  >
+    <Text style={styles.messageText}>{message}</Text>
+  </View>
+);
+
+const MessageInput = ({
+  value,
+  onChangeText,
+  onSend,
+}: {
+  value: string;
+  onChangeText: (text: string) => void;
+  onSend: () => void;
+}) => (
+  <View style={styles.inputContainer}>
+    <TextInput
+      style={styles.input}
+      placeholder="Escribe un mensaje..."
+      placeholderTextColor="#888"
+      value={value}
+      onChangeText={onChangeText}
+      onSubmitEditing={onSend}
+      returnKeyType="send"
+    />
+    <TouchableOpacity onPress={onSend} style={styles.sendButton}>
+      <Text style={styles.sendButtonText}>Enviar</Text>
+    </TouchableOpacity>
+  </View>
+);
+
+// --- COMPONENTE PRINCIPAL ---
 const MessageScreen: React.FC<{ navigation: any; route: any }> = ({ navigation, route }) => {
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState<Message[]>(dummyData);
@@ -35,12 +80,7 @@ const MessageScreen: React.FC<{ navigation: any; route: any }> = ({ navigation, 
 
   useLayoutEffect(() => {
     navigation.setOptions({
-      headerTitle: () => (
-        <View style={styles.headerTitleContainer}>
-          <Image source={{ uri: avatar }} style={styles.headerAvatar} />
-          <Text style={styles.headerUsername}>{user}</Text>
-        </View>
-      ),
+      headerTitle: () => <HeaderTitle avatar={avatar} user={user} />,
     });
   }, [navigation, user, avatar]);
 
@@ -63,14 +103,7 @@ const MessageScreen: React.FC<{ navigation: any; route: any }> = ({ navigation, 
   };
 
   const renderItem = ({ item }: { item: Message }) => (
-    <View
-      style={[
-        styles.messageBubble,
-        item.sender === 'me' ? styles.myMessage : styles.otherMessage,
-      ]}
-    >
-      <Text style={styles.messageText}>{item.message}</Text>
-    </View>
+    <MessageBubble message={item.message} sender={item.sender} />
   );
 
   return (
@@ -91,20 +124,11 @@ const MessageScreen: React.FC<{ navigation: any; route: any }> = ({ navigation, 
               showsVerticalScrollIndicator={false}
             />
 
-            <View style={styles.inputContainer}>
-              <TextInput
-                style={styles.input}
-                placeholder="Escribe un mensaje..."
-                placeholderTextColor="#888"
-                value={message}
-                onChangeText={setMessage}
-                onSubmitEditing={sendMessage}
-                returnKeyType="send"
-              />
-              <TouchableOpacity onPress={sendMessage} style={styles.sendButton}>
-                <Text style={styles.sendButtonText}>Enviar</Text>
-              </TouchableOpacity>
-            </View>
+            <MessageInput
+              value={message}
+              onChangeText={setMessage}
+              onSend={sendMessage}
+            />
           </View>
         </TouchableWithoutFeedback>
       </KeyboardAvoidingView>

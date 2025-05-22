@@ -9,11 +9,12 @@ import {
   TextInput,
   Alert,
   Modal,
-  Pressable,
+  ScrollView,
 } from 'react-native';
-import { ScrollView, Swipeable } from 'react-native-gesture-handler';
+import { Swipeable } from 'react-native-gesture-handler';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/Ionicons';
+
 interface Chat {
   id: string;
   user: string;
@@ -67,20 +68,157 @@ const CHATS: Chat[] = [
   },
 ];
 
+// Componente para cada chat en la lista principal
+const ChatCard = ({
+  chat,
+  onPress,
+  onDelete,
+  swipeableRef,
+}: {
+  chat: Chat;
+  onPress: () => void;
+  onDelete: () => void;
+  swipeableRef: React.RefObject<Swipeable> | ((ref: Swipeable | null) => void);
+}) => {
+  const renderRightActions = () => (
+    <View style={styles.rightActionContainer}>
+      <TouchableOpacity style={[styles.actionButton, styles.deleteButton]} onPress={onDelete}>
+        <Text style={styles.actionText}>Eliminar</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
+  return (
+    <Swipeable ref={swipeableRef} renderRightActions={renderRightActions}>
+      <TouchableOpacity style={styles.chatCard} onPress={onPress}>
+        <Image source={{ uri: chat.avatar }} style={styles.avatar} />
+        <View style={styles.chatInfo}>
+          <View style={styles.chatHeader}>
+            <Text style={styles.username}>{chat.user}</Text>
+            <View style={styles.rightHeader}>
+              {chat.unreadCount! > 0 && (
+                <View style={styles.unreadBadge}>
+                  <Text style={styles.unreadText}>{chat.unreadCount}</Text>
+                </View>
+              )}
+              <Text style={styles.timestamp}>{chat.timestamp}</Text>
+            </View>
+          </View>
+          <Text style={styles.lastMessage} numberOfLines={1}>
+            {chat.lastMessage}
+          </Text>
+        </View>
+      </TouchableOpacity>
+    </Swipeable>
+  );
+};
+
+// Componente para cada contacto dentro del modal
+const ContactItem = ({
+  contact,
+  onPress,
+}: {
+  contact: Chat;
+  onPress: () => void;
+}) => (
+  <TouchableOpacity style={styles.contactItem} onPress={onPress}>
+    <Image source={{ uri: contact.avatar }} style={styles.contactAvatar} />
+    <View>
+      <Text style={styles.contactName}>{contact.user}</Text>
+      {contact.status && <Text style={styles.contactStatus}>{contact.status}</Text>}
+    </View>
+  </TouchableOpacity>
+);
+
+// Barra de búsqueda con botón para abrir modal de contactos
+const SearchBar = ({
+  searchText,
+  setSearchText,
+  onContactsPress,
+}: {
+  searchText: string;
+  setSearchText: (text: string) => void;
+  onContactsPress: () => void;
+}) => (
+  <View style={styles.searchBarContainer}>
+    <TextInput
+      style={styles.searchInput}
+      placeholder="Buscar chats..."
+      value={searchText}
+      onChangeText={setSearchText}
+      clearButtonMode="while-editing"
+    />
+    <TouchableOpacity style={styles.iconButton} onPress={onContactsPress}>
+      <Icon name="people-outline" size={22} color="#007AFF" />
+    </TouchableOpacity>
+  </View>
+);
+
+// Modal para mostrar lista de contactos con búsqueda
+const ContactsModal = ({
+  visible,
+  onClose,
+  contacts,
+  searchContacto,
+  setSearchContacto,
+  onContactPress,
+  insets,
+}: {
+  visible: boolean;
+  onClose: () => void;
+  contacts: Chat[];
+  searchContacto: string;
+  setSearchContacto: (text: string) => void;
+  onContactPress: (contact: Chat) => void;
+  insets: { top: number; bottom: number };
+}) => (
+  <Modal animationType="slide" transparent={false} visible={visible} onRequestClose={onClose}>
+    <View
+      style={[
+        styles.fullModalContainer,
+        {
+          paddingTop: insets.top,
+          paddingBottom: insets.bottom,
+        },
+      ]}
+    >
+      <View style={styles.modalHeader}>
+        <Text style={styles.modalTitle}>Contactos</Text>
+        <TouchableOpacity onPress={onClose}>
+          <Text style={styles.modalCloseText}>Cerrar</Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.modalSearchContainer}>
+        <TextInput
+          style={styles.modalSearchInput}
+          placeholder="Buscar contacto..."
+          value={searchContacto}
+          onChangeText={setSearchContacto}
+        />
+      </View>
+
+      <ScrollView contentContainerStyle={styles.contactList}>
+        {contacts.map(contact => (
+          <ContactItem
+            key={contact.id}
+            contact={contact}
+            onPress={() => onContactPress(contact)}
+          />
+        ))}
+      </ScrollView>
+    </View>
+  </Modal>
+);
+
 const ChatScreen = ({ navigation }: { navigation: any }) => {
   const [searchText, setSearchText] = useState('');
   const [isModalVisible, setModalVisible] = useState(false);
   const [searchContacto, setSearchContacto] = useState<string>('');
 
-  const contactosFiltrados = CHATS.filter((contact: Chat) =>
-    contact.user.toLowerCase().includes(searchContacto.toLowerCase())
-  );
-
-  const openContactsModal = () => setModalVisible(true);
-  const closeContactsModal = () => setModalVisible(false);
-
   const insets = useSafeAreaInsets();
 
+  // Inicializamos los chats con un número random de unreadCount
   const [chats, setChats] = useState(
     CHATS.map(chat => ({
       ...chat,
@@ -88,6 +226,7 @@ const ChatScreen = ({ navigation }: { navigation: any }) => {
     }))
   );
 
+  // Para manejar referencias a los Swipeables y poder cerrarlos programáticamente
   const swipeableRefs = useRef<Map<string, Swipeable>>(new Map());
 
   const closeSwipe = (id: string) => {
@@ -117,51 +256,7 @@ const ChatScreen = ({ navigation }: { navigation: any }) => {
     );
   };
 
-  const renderRightActions = (id: string, user: string) => (
-    <View style={styles.rightActionContainer}>
-      <TouchableOpacity
-        style={[styles.actionButton, styles.deleteButton]}
-        onPress={() => confirmDelete(id, user)}
-      >
-        <Text style={styles.actionText}>Eliminar</Text>
-      </TouchableOpacity>
-    </View>
-  );
-
-  const renderItem = ({ item }: { item: Chat }) => {
-    return (
-      <Swipeable
-        ref={ref => {
-          if (ref) swipeableRefs.current.set(item.id, ref);
-        }}
-        renderRightActions={() => renderRightActions(item.id, item.user)}
-      >
-        <TouchableOpacity
-          style={styles.chatCard}
-          onPress={() => navigation.navigate('Message', { user: item.user, avatar: item.avatar })}
-        >
-          <Image source={{ uri: item.avatar }} style={styles.avatar} />
-          <View style={styles.chatInfo}>
-            <View style={styles.chatHeader}>
-              <Text style={styles.username}>{item.user}</Text>
-              <View style={styles.rightHeader}>
-                {item.unreadCount! > 0 && (
-                  <View style={styles.unreadBadge}>
-                    <Text style={styles.unreadText}>{item.unreadCount}</Text>
-                  </View>
-                )}
-                <Text style={styles.timestamp}>{item.timestamp}</Text>
-              </View>
-            </View>
-            <Text style={styles.lastMessage} numberOfLines={1}>
-              {item.lastMessage}
-            </Text>
-          </View>
-        </TouchableOpacity>
-      </Swipeable>
-    );
-  };
-
+  // Filtrar chats según texto de búsqueda
   const filteredChats = useMemo(
     () =>
       chats.filter(
@@ -172,86 +267,48 @@ const ChatScreen = ({ navigation }: { navigation: any }) => {
     [searchText, chats]
   );
 
+  // Filtrar contactos para modal
+  const contactosFiltrados = CHATS.filter(contact =>
+    contact.user.toLowerCase().includes(searchContacto.toLowerCase())
+  );
+
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.searchBarContainer}>
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Buscar chats..."
-          value={searchText}
-          onChangeText={setSearchText}
-          clearButtonMode="while-editing"
-        />
-        <TouchableOpacity style={styles.iconButton} onPress={openContactsModal}>
-          <Icon name="people-outline" size={22} color="#007AFF" />
-        </TouchableOpacity>
-      </View>
+      <SearchBar
+        searchText={searchText}
+        setSearchText={setSearchText}
+        onContactsPress={() => setModalVisible(true)}
+      />
       <FlatList
         data={filteredChats}
         keyExtractor={item => item.id}
-        renderItem={renderItem}
+        renderItem={({ item }) => (
+          <ChatCard
+            chat={item}
+            swipeableRef={ref => {
+              if (ref) swipeableRefs.current.set(item.id, ref);
+            }}
+            onPress={() =>
+              navigation.navigate('Message', { user: item.user, avatar: item.avatar })
+            }
+            onDelete={() => confirmDelete(item.id, item.user)}
+          />
+        )}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         keyboardShouldPersistTaps="handled"
       />
-      <Modal
-        animationType="slide"
-        transparent={false}
+      <ContactsModal
         visible={isModalVisible}
-        onRequestClose={closeContactsModal}
-      >
-        <View
-          style={[
-            styles.fullModalContainer,
-            {
-              paddingTop: insets.top,
-              paddingBottom: insets.bottom,
-            },
-          ]}
-        >
-          {/* Header sin línea */}
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Contactos</Text>
-            <TouchableOpacity onPress={closeContactsModal}>
-              <Text style={styles.modalCloseText}>Cerrar</Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* 🔍 Input de búsqueda */}
-          <View style={styles.modalSearchContainer}>
-            <TextInput
-              style={styles.modalSearchInput}
-              placeholder="Buscar contacto..."
-              value={searchContacto}
-              onChangeText={setSearchContacto}
-            />
-          </View>
-
-          {/* Lista filtrada */}
-          <ScrollView contentContainerStyle={styles.contactList}>
-            {contactosFiltrados.map((contact: Chat) => (
-              <TouchableOpacity
-                key={contact.id}
-                style={styles.contactItem}
-                onPress={() => {
-                  closeContactsModal();
-                  navigation.navigate('Message', {
-                    user: contact.user,
-                    avatar: contact.avatar,
-                  });
-                }}
-              >
-                <Image source={{ uri: contact.avatar }} style={styles.contactAvatar} />
-                <View>
-                  <Text style={styles.contactName}>{contact.user}</Text>
-                  {contact.status && (
-                    <Text style={styles.contactStatus}>{contact.status}</Text>
-                  )}
-                </View>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
-      </Modal>
+        onClose={() => setModalVisible(false)}
+        contacts={contactosFiltrados}
+        searchContacto={searchContacto}
+        setSearchContacto={setSearchContacto}
+        onContactPress={contact => {
+          setModalVisible(false);
+          navigation.navigate('Message', { user: contact.user, avatar: contact.avatar });
+        }}
+        insets={insets}
+      />
     </SafeAreaView>
   );
 };
@@ -263,8 +320,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
     paddingHorizontal: 12,
-    // Padding adicional para asegurar espacio sobre el notch (barra de estado)
-    paddingTop: 20, // Ajusta el valor si es necesario
+    paddingTop: 20,
   },
   searchInput: {
     flex: 1,
@@ -352,64 +408,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
   },
-  contactsButton: {
-    backgroundColor: '#007AFF',
-    paddingVertical: 10,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  contactsButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  fullModalContainer: {
-    flex: 1,
-    backgroundColor: '#f8f9fa',
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 10,
-    backgroundColor: '#ffffff',
-    // borderBottomWidth eliminado
-  },
-  modalTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  modalCloseText: {
-    fontSize: 16,
-    color: '#007AFF',
-    fontWeight: '600',
-  },
-  contactList: {
-    paddingHorizontal: 20,
-    paddingTop: 10,
-  },
-  contactItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-  contactAvatar: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
-    marginRight: 14,
-  },
-  contactName: {
-    fontSize: 16,
-    color: '#333',
-    fontWeight: '500',
-  },
   searchBarContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -426,12 +424,26 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  iconText: {
-    fontSize: 20,
-    color: '#fff',
+  fullModalContainer: {
+    flex: 1,
+    backgroundColor: '#f8f9fa',
   },
-  iconEmoji: {
-    fontSize: 20,
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 10,
+    backgroundColor: '#ffffff',
+  },
+  modalTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#000',
+  },
+  modalCloseText: {
+    fontSize: 16,
     color: '#007AFF',
   },
   modalSearchContainer: {
@@ -440,17 +452,37 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   modalSearchInput: {
-    height: 42,
-    backgroundColor: '#f0f0f0',
-    borderRadius: 10,
+    height: 44,
+    borderRadius: 12,
+    borderColor: '#ccc',
+    borderWidth: 1,
     paddingHorizontal: 14,
     fontSize: 16,
-    borderWidth: 1,
-    borderColor: '#ccc',
+    backgroundColor: '#fff',
+  },
+  contactList: {
+    paddingHorizontal: 20,
+  },
+  contactItem: {
+    flexDirection: 'row',
+    paddingVertical: 12,
+    borderBottomColor: '#ddd',
+    borderBottomWidth: 1,
+    alignItems: 'center',
+  },
+  contactAvatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    marginRight: 14,
+  },
+  contactName: {
+    fontSize: 16,
+    fontWeight: '500',
   },
   contactStatus: {
     fontSize: 13,
-    color: '#777',
+    color: '#666',
     marginTop: 2,
   },
 });
