@@ -15,6 +15,7 @@ import { Swipeable } from 'react-native-gesture-handler';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/Ionicons';
 
+// --- Tipos e Interfaces ---
 interface Chat {
   id: string;
   user: string;
@@ -25,6 +26,7 @@ interface Chat {
   status: string;
 }
 
+// --- Data Dummy ---
 const CHATS: Chat[] = [
   {
     id: '1',
@@ -68,7 +70,9 @@ const CHATS: Chat[] = [
   },
 ];
 
-// Componente para cada chat en la lista principal
+// --- COMPONENTES INTERNOS ---
+
+// Tarjeta de chat en la lista principal
 const ChatCard = ({
   chat,
   onPress,
@@ -113,7 +117,7 @@ const ChatCard = ({
   );
 };
 
-// Componente para cada contacto dentro del modal
+// Tarjeta de contacto en el modal
 const ContactItem = ({
   contact,
   onPress,
@@ -211,6 +215,7 @@ const ContactsModal = ({
   </Modal>
 );
 
+// --- COMPONENTE PRINCIPAL ---
 const ChatScreen = ({ navigation }: { navigation: any }) => {
   const [searchText, setSearchText] = useState('');
   const [isModalVisible, setModalVisible] = useState(false);
@@ -272,6 +277,7 @@ const ChatScreen = ({ navigation }: { navigation: any }) => {
     contact.user.toLowerCase().includes(searchContacto.toLowerCase())
   );
 
+  // --- Render principal ---
   return (
     <SafeAreaView style={styles.container}>
       <SearchBar
