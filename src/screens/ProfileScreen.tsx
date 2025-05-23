@@ -71,24 +71,15 @@ const ProfileScreen = () => {
           <RowItem label="RUT" value="19.234.456-7" />
           <RowItem label="Promedio general" value="6.3" />
         </Section>
-
         <Section icon="book" title="Ramos Extracurriculares">
           <RowItem label="Teatro Escolar" value="Martes 15:00" />
           <RowItem label="Robótica" value="Jueves 16:30" />
         </Section>
-
-        <Section icon="clipboard" title="Notas Recientes">
-          <RowItem label="Matemáticas" value="6.5" />
-          <RowItem label="Lenguaje" value="6.2" />
-          <RowItem label="Ciencias" value="6.0" />
-        </Section>
-
         <Section icon="time" title="Horario Semanal">
           <RowItem label="Lunes" value="8:00 - 14:00" />
           <RowItem label="Martes" value="8:00 - 16:00" />
           <RowItem label="Miércoles" value="8:00 - 14:00" />
         </Section>
-
         <Section icon="chatbubble-ellipses" title="Observaciones">
           <Observaciones>
             Tomás ha demostrado un excelente compromiso académico este semestre. Participa activamente y tiene buena relación con sus compañeros.

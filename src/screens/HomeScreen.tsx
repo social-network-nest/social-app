@@ -388,13 +388,17 @@ const MenuModal = ({
   <Modal visible={visible} animationType="slide">
     <SafeAreaView style={styles.modalContent}>
       {/* Header del Modal */}
-      <View style={styles.modalHeader}>
+      <View style={styles.modalHeaderCustom}>
         <TouchableOpacity onPress={onClose} style={styles.backButton}>
-          <View style={styles.arrowButtonContainer}>
-            <Ionicons name="arrow-back" size={28} color="#007AFF" />
+          <View style={styles.arrowButtonContainerCustom}>
+            <Ionicons name="arrow-back" size={26} color="#007AFF" />
           </View>
         </TouchableOpacity>
-        <Text style={styles.modalTitle}>{activeMenuOption}</Text>
+        <Text style={styles.modalTitleCustom} numberOfLines={1}>
+          {activeMenuOption}
+        </Text>
+        {/* Espacio para centrar el título */}
+        <View style={{ width: 40 }} />
       </View>
       {/* Contenido del Modal */}
       <ScrollView contentContainerStyle={styles.scrollContainer}>
@@ -684,13 +688,17 @@ const SubjectPostsModal = ({
 }) => (
   <Modal visible={visible} animationType="slide" transparent={true}>
     <SafeAreaView style={styles.modalContent}>
-      <View style={styles.modalHeader}>
+      {/* Header del Modal */}
+      <View style={styles.modalHeaderCustom}>
         <TouchableOpacity onPress={onClose} style={styles.backButton}>
-          <View style={styles.arrowButtonContainer}>
+          <View style={styles.arrowButtonContainerCustom}>
             <Ionicons name="arrow-back" size={28} color="#007AFF" />
           </View>
         </TouchableOpacity>
-        <Text style={styles.modalTitle}>{selectedSubject}</Text>
+        <Text style={styles.modalTitleCustom} numberOfLines={1}>
+          {selectedSubject}
+        </Text>
+        <View style={{ width: 40 }} />
       </View>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.card}>
@@ -1372,5 +1380,33 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#555',
     lineHeight: 20,
+  },
+  modalHeaderCustom: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#fff',
+    paddingVertical: 12,
+    paddingHorizontal: 18,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOpacity: 0.06,
+    shadowRadius: 2,
+  },
+  arrowButtonContainerCustom: {
+    backgroundColor: '#f2f6fa',
+    borderRadius: 20,
+    padding: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalTitleCustom: {
+    flex: 1,
+    textAlign: 'center',
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#222',
   },
 });
