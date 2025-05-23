@@ -17,6 +17,72 @@ import { Ionicons } from '@expo/vector-icons';
 
 const { height, width } = Dimensions.get('window');
 
+// --- COMPONENTES INTERNOS ---
+
+// Comentario individual
+const ProfileCommentItem = ({ comment }: { comment: any }) => (
+  <View style={styles.commentContainer}>
+    <Image
+      source={{ uri: comment.user?.avatar || 'default-avatar-url.jpg' }}
+      style={styles.commentAvatar}
+    />
+    <View style={styles.commentBubble}>
+      <Text style={styles.commentName}>{comment.user?.name || 'Nombre no disponible'}</Text>
+      <Text>{comment.text || 'Comentario vacío'}</Text>
+    </View>
+  </View>
+);
+
+// Post individual
+const ProfilePostCard = ({
+  item,
+  onLike,
+  onDelete,
+}: {
+  item: any;
+  onLike: (postId: number) => void;
+  onDelete: (postId: number) => void;
+}) => (
+  <View style={styles.postCard}>
+    {/* Header */}
+    <View style={styles.postHeader}>
+      <Image source={{ uri: item.user.avatar }} style={styles.postAvatar} />
+      <Text style={styles.postUsername}>{item.user.name}</Text>
+    </View>
+
+    {/* Content */}
+    <Text style={styles.postContent}>{item.content}</Text>
+    {item.image && (
+      <Image source={{ uri: item.image }} style={styles.postImage} resizeMode="cover" />
+    )}
+
+    {/* Likes */}
+    <View style={styles.likeContainer}>
+      <TouchableOpacity onPress={() => onLike(item.id)} style={styles.likeButton}>
+        <Ionicons
+          name={item.likedByUser ? 'heart' : 'heart-outline'}
+          size={24}
+          color={item.likedByUser ? '#e0245e' : '#555'}
+        />
+        <Text style={styles.likeCount}>{item.likes}</Text>
+      </TouchableOpacity>
+      <TouchableOpacity onPress={() => onDelete(item.id)} style={styles.deleteButton}>
+        <Text style={{ color: 'red', marginLeft: 15 }}>Eliminar</Text>
+      </TouchableOpacity>
+    </View>
+
+    {/* Comments */}
+    {item.comments && item.comments.length > 0 ? (
+      item.comments.map((comment: any) => (
+        <ProfileCommentItem key={comment.id} comment={comment} />
+      ))
+    ) : (
+      <Text>No hay comentarios aún.</Text>
+    )}
+  </View>
+);
+
+// --- COMPONENTE PRINCIPAL ---
 const ProfileScreen = () => {
   const [userName, setUserName] = useState('Camila Torres');
   const [userEmail, setUserEmail] = useState('camila@example.com');
@@ -89,7 +155,7 @@ const ProfileScreen = () => {
   };
 
   const handleCancelChanges = () => {
-    setModalVisible(false); // Cierra el modal sin guardar cambios
+    setModalVisible(false);
   };
 
   const toggleLike = (postId: number) => {
@@ -112,53 +178,7 @@ const ProfileScreen = () => {
   };
 
   const renderPost = ({ item }: { item: typeof posts[0] }) => (
-    <View style={styles.postCard}>
-      {/* Header */}
-      <View style={styles.postHeader}>
-        <Image source={{ uri: item.user.avatar }} style={styles.postAvatar} />
-        <Text style={styles.postUsername}>{item.user.name}</Text>
-      </View>
-
-      {/* Content */}
-      <Text style={styles.postContent}>{item.content}</Text>
-      {item.image && (
-        <Image source={{ uri: item.image }} style={styles.postImage} resizeMode="cover" />
-      )}
-
-      {/* Likes */}
-      <View style={styles.likeContainer}>
-        <TouchableOpacity onPress={() => toggleLike(item.id)} style={styles.likeButton}>
-          <Ionicons
-            name={item.likedByUser ? 'heart' : 'heart-outline'}
-            size={24}
-            color={item.likedByUser ? '#e0245e' : '#555'}
-          />
-          <Text style={styles.likeCount}>{item.likes}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => handleDeletePost(item.id)} style={styles.deleteButton}>
-          <Text style={{ color: 'red', marginLeft: 15 }}>Eliminar</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Comments */}
-      {item.comments && item.comments.length > 0 ? (
-        item.comments.map((comment) => (
-          <View key={comment.id} style={styles.commentContainer}>
-            {/* Usamos el avatar y nombre del usuario que hizo el comentario */}
-            <Image
-              source={{ uri: comment.user?.avatar || 'default-avatar-url.jpg' }}
-              style={styles.commentAvatar}
-            />
-            <View style={styles.commentBubble}>
-              <Text style={styles.commentName}>{comment.user?.name || 'Nombre no disponible'}</Text>
-              <Text>{comment.text || 'Comentario vacío'}</Text>
-            </View>
-          </View>
-        ))
-      ) : (
-        <Text>No hay comentarios aún.</Text> // Si no hay comentarios
-      )}
-    </View>
+    <ProfilePostCard item={item} onLike={toggleLike} onDelete={handleDeletePost} />
   );
 
   return (
@@ -227,6 +247,7 @@ const ProfileScreen = () => {
 };
 
 const styles = StyleSheet.create({
+  // ...tus estilos igual que antes...
   container: {
     flex: 1,
     backgroundColor: '#fff',
