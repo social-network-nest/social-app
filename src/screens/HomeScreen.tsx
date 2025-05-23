@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
+// --- Tipos e Interfaces ---
 interface Post {
   id: number;
   user: {
@@ -38,6 +39,7 @@ interface Comment {
   text: string;
 }
 
+// --- Data Dummy ---
 const samplePosts: Post[] = [
   {
     id: 1,
@@ -128,6 +130,599 @@ const samplePosts: Post[] = [
   },
 ];
 
+// --- COMPONENTES INTERNOS ---
+
+// Comentario individual
+const CommentItem = ({ item, onUserPress }: { item: Comment; onUserPress: (user: Comment['user']) => void }) => (
+  <View style={styles.commentContainer}>
+    <TouchableOpacity onPress={() => onUserPress(item.user)}>
+      <Image source={{ uri: item.user.avatar }} style={styles.commentAvatar} />
+    </TouchableOpacity>
+    <TouchableOpacity onPress={() => onUserPress(item.user)} style={styles.commentBubble}>
+      <Text style={styles.commentName}>{item.user.name}</Text>
+      <Text>{item.text}</Text>
+    </TouchableOpacity>
+  </View>
+);
+
+// Post individual
+const PostCard = ({
+  item,
+  onUserPress,
+  onLike,
+  onDelete,
+  onAddCommentPress,
+  onSendComment,
+  commentingPostId,
+  newCommentText,
+  setNewCommentText,
+  isProfileView,
+}: {
+  item: Post;
+  onUserPress: (user: Post['user']) => void;
+  onLike: (postId: number) => void;
+  onDelete?: (postId: number) => void;
+  onAddCommentPress: (postId: number) => void;
+  onSendComment: () => void;
+  commentingPostId: number | null;
+  newCommentText: string;
+  setNewCommentText: (text: string) => void;
+  isProfileView?: boolean;
+}) => (
+  <View style={styles.postCard}>
+    <TouchableOpacity onPress={() => onUserPress(item.user)} style={styles.postHeader}>
+      <Image source={{ uri: item.user.avatar }} style={styles.postAvatar} />
+      <Text style={styles.postUsername}>{item.user.name}</Text>
+    </TouchableOpacity>
+    <Text style={styles.postContent}>{item.content}</Text>
+    {item.image && (
+      <Image
+        source={{ uri: item.image }}
+        style={styles.postImage}
+        resizeMode="cover"
+      />
+    )}
+    <View style={styles.likeContainer}>
+      <TouchableOpacity onPress={() => onLike(item.id)} style={styles.likeButton}>
+        <Ionicons
+          name={item.likedByUser ? 'heart' : 'heart-outline'}
+          size={24}
+          color={item.likedByUser ? '#e0245e' : '#555'}
+        />
+        <Text style={styles.likeCount}>{item.likes}</Text>
+      </TouchableOpacity>
+      {isProfileView && onDelete && (
+        <TouchableOpacity
+          onPress={() => onDelete(item.id)}
+          style={styles.deleteButton}
+        >
+          <Text style={{ color: 'red', marginLeft: 15 }}>Eliminar</Text>
+        </TouchableOpacity>
+      )}
+    </View>
+    <FlatList
+      data={item.comments}
+      keyExtractor={(comment) => comment.id.toString()}
+      renderItem={({ item }) => <CommentItem item={item} onUserPress={onUserPress} />}
+      scrollEnabled={false}
+      style={styles.commentsList}
+    />
+    {commentingPostId === item.id ? (
+      <View style={styles.addCommentContainer}>
+        <Image
+          source={{ uri: 'https://i.pravatar.cc/150?img=10' }}
+          style={styles.commentAvatar}
+        />
+        <TextInput
+          placeholder="Escribe un comentario..."
+          value={newCommentText}
+          onChangeText={setNewCommentText}
+          style={[styles.commentInput, { marginLeft: 8 }]}
+        />
+        <TouchableOpacity onPress={onSendComment} style={styles.sendCommentButton}>
+          <Ionicons name="send" size={24} color="#007AFF" />
+        </TouchableOpacity>
+      </View>
+    ) : (
+      <TouchableOpacity onPress={() => onAddCommentPress(item.id)} style={styles.addCommentButton}>
+        <Text style={{ color: '#007AFF' }}>Agregar comentario</Text>
+      </TouchableOpacity>
+    )}
+  </View>
+);
+
+// Modal de perfil de usuario
+const UserProfileModal = ({
+  visible,
+  user,
+  onClose,
+  userPosts,
+  renderPost,
+}: {
+  visible: boolean;
+  user: Post['user'] | null;
+  onClose: () => void;
+  userPosts: Post[];
+  renderPost: (args: { item: Post }, isProfileView?: boolean) => React.ReactElement | null;
+}) => (
+  <Modal visible={visible} animationType="slide">
+    <SafeAreaView style={styles.modalContainer}>
+      <TouchableOpacity onPress={onClose} style={styles.modalBack}>
+        <Ionicons name="arrow-back" size={28} color="black" />
+      </TouchableOpacity>
+      {user && (
+        <ScrollView>
+          <View style={styles.profileInfo}>
+            <Image source={{ uri: user.avatar }} style={styles.profileAvatar} />
+            <Text style={styles.profileName}>{user.name}</Text>
+            {user.bio && <Text style={styles.profileBio}>{user.bio}</Text>}
+            <View style={styles.profileButtonsContainer}>
+              <TouchableOpacity style={styles.profileButton}>
+                <Text style={styles.profileButtonText}>Agregar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.profileButton}>
+                <Text style={styles.profileButtonText}>Seguir</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.profileButton}>
+                <Text style={styles.profileButtonText}>Reportar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+          <FlatList
+            data={userPosts}
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={({ item }) => renderPost({ item }, true)}
+          />
+        </ScrollView>
+      )}
+    </SafeAreaView>
+  </Modal>
+);
+
+// Modal para crear un post
+const CreatePostModal = ({
+  visible,
+  onClose,
+  onCreate,
+  newPostContent,
+  setNewPostContent,
+}: {
+  visible: boolean;
+  onClose: () => void;
+  onCreate: () => void;
+  newPostContent: string;
+  setNewPostContent: (text: string) => void;
+}) => (
+  <Modal visible={visible} animationType="slide">
+    <SafeAreaView style={styles.modalContainer}>
+      <View style={styles.createPostModalContent}>
+        <Text style={styles.createPostTitle}>Crear nuevo post</Text>
+        <TextInput
+          multiline
+          placeholder="¿Qué quieres compartir?"
+          value={newPostContent}
+          onChangeText={setNewPostContent}
+          style={styles.createPostInput}
+        />
+        <View style={styles.createPostButtons}>
+          <TouchableOpacity onPress={onClose} style={[styles.modalButton, { backgroundColor: '#ccc' }]}>
+            <Text>Cancelar</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={onCreate} style={[styles.modalButton, { backgroundColor: '#007AFF' }]}>
+            <Text style={{ color: 'white' }}>Publicar</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </SafeAreaView>
+  </Modal>
+);
+
+// Sidebar animado
+const Sidebar = ({
+  visible,
+  sidebarAnim,
+  closeSidebar,
+  handleMenuOptionPress,
+}: {
+  visible: boolean;
+  sidebarAnim: Animated.Value;
+  closeSidebar: () => void;
+  handleMenuOptionPress: (option: string) => void;
+}) =>
+  visible ? (
+    <SafeAreaView style={StyleSheet.absoluteFill}>
+      <TouchableOpacity
+        activeOpacity={1}
+        onPress={closeSidebar}
+        style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.3)' }}
+      >
+        <Animated.View
+          style={[
+            styles.sidebarRight,
+            {
+              right: 0,
+              transform: [{ translateX: sidebarAnim }],
+            },
+          ]}
+        >
+          <Text style={styles.sidebarTitle}>Menú</Text>
+          <TouchableOpacity onPress={() => handleMenuOptionPress('Mis Asignaturas')} style={styles.sidebarItem}>
+            <Ionicons name="book-outline" size={22} color="#333" style={styles.sidebarIcon} />
+            <Text style={styles.sidebarText}>Mis Asignaturas</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => handleMenuOptionPress('Notas')} style={styles.sidebarItem}>
+            <Ionicons name="document-text-outline" size={22} color="#333" style={styles.sidebarIcon} />
+            <Text style={styles.sidebarText}>Notas</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => handleMenuOptionPress('Asistencias')} style={styles.sidebarItem}>
+            <Ionicons name="checkmark-done-outline" size={22} color="#333" style={styles.sidebarIcon} />
+            <Text style={styles.sidebarText}>Asistencias</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => handleMenuOptionPress('Anotaciones')} style={styles.sidebarItem}>
+            <Ionicons name="create-outline" size={22} color="#333" style={styles.sidebarIcon} />
+            <Text style={styles.sidebarText}>Anotaciones</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => handleMenuOptionPress('Calendarios')} style={styles.sidebarItem}>
+            <Ionicons name="calendar-outline" size={22} color="#333" style={styles.sidebarIcon} />
+            <Text style={styles.sidebarText}>Calendarios</Text>
+          </TouchableOpacity>
+        </Animated.View>
+      </TouchableOpacity>
+    </SafeAreaView>
+  ) : null;
+
+// Modal de menú lateral (Mis Asignaturas, Notas, etc.)
+const MenuModal = ({
+  visible,
+  onClose,
+  activeMenuOption,
+  setActiveMenuOption,
+  openSubjectPostsModal,
+}: {
+  visible: boolean;
+  onClose: () => void;
+  activeMenuOption: string | null;
+  setActiveMenuOption: (option: string | null) => void;
+  openSubjectPostsModal: (subjectName: string) => void;
+}) => (
+  <Modal visible={visible} animationType="slide">
+    <SafeAreaView style={styles.modalContent}>
+      {/* Header del Modal */}
+      <View style={styles.modalHeader}>
+        <TouchableOpacity onPress={onClose} style={styles.backButton}>
+          <View style={styles.arrowButtonContainer}>
+            <Ionicons name="arrow-back" size={28} color="#007AFF" />
+          </View>
+        </TouchableOpacity>
+        <Text style={styles.modalTitle}>{activeMenuOption}</Text>
+      </View>
+      {/* Contenido del Modal */}
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        {/* Mis Asignaturas */}
+        {activeMenuOption === 'Mis Asignaturas' && (
+          <View style={styles.card}>
+            <Text style={styles.sectionTitle}>Asignaturas Inscritas:</Text>
+            {/* Matemáticas */}
+            <View style={styles.noteContainer}>
+              <TouchableOpacity onPress={() => openSubjectPostsModal('Matemáticas')}>
+                <Text style={styles.noteItem}>📘 <Text style={styles.subject}>Matemáticas</Text></Text>
+              </TouchableOpacity>
+              <View style={styles.detailContainer}>
+                <Text style={styles.detail}>👨‍🏫 Profesor: Prof. Juan Pérez</Text>
+                <Text style={styles.detail}>📅 Horarios:</Text>
+                <Text style={styles.detail}>- Lunes: 8:00 AM a 10:00 AM</Text>
+                <Text style={styles.detail}>- Martes: 9:00 AM a 11:00 AM</Text>
+                <Text style={styles.detail}>- Miércoles: 8:00 AM a 10:00 AM</Text>
+              </View>
+            </View>
+            {/* Historia */}
+            <View style={styles.noteContainer}>
+              <TouchableOpacity onPress={() => openSubjectPostsModal('Historia')}>
+                <Text style={styles.noteItem}>📗 <Text style={styles.subject}>Historia</Text></Text>
+              </TouchableOpacity>
+              <View style={styles.detailContainer}>
+                <Text style={styles.detail}>👨‍🏫 Profesor: Prof. Laura Gómez</Text>
+                <Text style={styles.detail}>📅 Horarios:</Text>
+                <Text style={styles.detail}>- Lunes: 10:30 AM a 12:30 PM</Text>
+                <Text style={styles.detail}>- Jueves: 9:00 AM a 11:00 AM</Text>
+              </View>
+            </View>
+            {/* Ciencias */}
+            <View style={styles.noteContainer}>
+              <TouchableOpacity onPress={() => openSubjectPostsModal('Ciencias')}>
+                <Text style={styles.noteItem}>📙 <Text style={styles.subject}>Ciencias</Text></Text>
+              </TouchableOpacity>
+              <View style={styles.detailContainer}>
+                <Text style={styles.detail}>👨‍🏫 Profesor: Prof. Manuel Rodríguez</Text>
+                <Text style={styles.detail}>📅 Horarios:</Text>
+                <Text style={styles.detail}>- Martes: 2:00 PM a 4:00 PM</Text>
+                <Text style={styles.detail}>- Viernes: 3:00 PM a 5:00 PM</Text>
+              </View>
+            </View>
+            {/* Lenguaje */}
+            <View style={styles.noteContainer}>
+              <TouchableOpacity onPress={() => openSubjectPostsModal('Lenguaje')}>
+                <Text style={styles.noteItem}>📕 <Text style={styles.subject}>Lenguaje</Text></Text>
+              </TouchableOpacity>
+              <View style={styles.detailContainer}>
+                <Text style={styles.detail}>👨‍🏫 Profesor: Prof. Sandra Molina</Text>
+                <Text style={styles.detail}>📅 Horarios:</Text>
+                <Text style={styles.detail}>- Miércoles: 9:00 AM a 11:00 AM</Text>
+                <Text style={styles.detail}>- Viernes: 10:00 AM a 12:00 PM</Text>
+              </View>
+            </View>
+          </View>
+        )}
+        {/* Notas */}
+        {activeMenuOption === 'Notas' && (
+          <View style={styles.card}>
+            <Text style={styles.sectionTitle}>Notas:</Text>
+            {/* Matemáticas */}
+            <View style={styles.noteContainer}>
+              <Text style={styles.noteItem}>📘 <Text style={styles.subject}>Matemáticas:</Text></Text>
+              <View style={styles.detailContainer}>
+                <Text style={styles.detail}>📝 Examen Final: 7.0</Text>
+                <Text style={styles.detail}>📚 Tareas: 6.5</Text>
+                <Text style={styles.detail}>👨‍🏫 Participación: 6.0</Text>
+                <Text style={styles.detail}>🔄 Recuperación: 6.8</Text>
+              </View>
+            </View>
+            {/* Historia */}
+            <View style={styles.noteContainer}>
+              <Text style={styles.noteItem}>📗 <Text style={styles.subject}>Historia:</Text></Text>
+              <View style={styles.detailContainer}>
+                <Text style={styles.detail}>📝 Examen Final: 6.5</Text>
+                <Text style={styles.detail}>📚 Tareas: 7.0</Text>
+                <Text style={styles.detail}>👨‍🏫 Participación: 6.8</Text>
+                <Text style={styles.detail}>🔄 Recuperación: 7.0</Text>
+              </View>
+            </View>
+            {/* Ciencias */}
+            <View style={styles.noteContainer}>
+              <Text style={styles.noteItem}>📙 <Text style={styles.subject}>Ciencias:</Text></Text>
+              <View style={styles.detailContainer}>
+                <Text style={styles.detail}>📝 Examen Final: 5.8</Text>
+                <Text style={styles.detail}>📚 Tareas: 5.5</Text>
+                <Text style={styles.detail}>👨‍🏫 Participación: 6.0</Text>
+                <Text style={styles.detail}>🔄 Recuperación: 6.0</Text>
+              </View>
+            </View>
+            {/* Lenguaje */}
+            <View style={styles.noteContainer}>
+              <Text style={styles.noteItem}>📕 <Text style={styles.subject}>Lenguaje:</Text></Text>
+              <View style={styles.detailContainer}>
+                <Text style={styles.detail}>📝 Examen Final: 7.0</Text>
+                <Text style={styles.detail}>📚 Tareas: 6.5</Text>
+                <Text style={styles.detail}>👨‍🏫 Participación: 6.2</Text>
+                <Text style={styles.detail}>🔄 Recuperación: 6.8</Text>
+              </View>
+            </View>
+            <Text style={styles.average}>Promedio: 6.7</Text>
+          </View>
+        )}
+        {/* Asistencias */}
+        {activeMenuOption === 'Asistencias' && (
+          <View style={styles.card}>
+            <Text style={styles.sectionTitle}>Resumen de Asistencias:</Text>
+            <View style={styles.attendanceContainer}>
+              <Text style={styles.attendanceDetail}>✅ Asistencias: <Text style={styles.attendanceValue}>42</Text></Text>
+              <Text style={styles.attendanceDetail}>❌ Ausencias: <Text style={styles.attendanceValue}>3</Text></Text>
+              <Text style={styles.attendanceDetail}>⏳ Atrasos: <Text style={styles.attendanceValue}>2</Text></Text>
+            </View>
+            <Text style={styles.sectionTitle}>Asistencias por Semana:</Text>
+            <View style={styles.weeklyAttendance}>
+              <View style={styles.weekContainer}>
+                <Text style={styles.weekTitle}>Semana 1 (1-7 Mayo)</Text>
+                <Text style={styles.weekDetail}>✅ Lunes: Asistió</Text>
+                <Text style={styles.weekDetail}>✅ Martes: Asistió</Text>
+                <Text style={styles.weekDetail}>❌ Miércoles: Ausente</Text>
+                <Text style={styles.weekDetail}>✅ Jueves: Asistió</Text>
+                <Text style={styles.weekDetail}>✅ Viernes: Asistió</Text>
+              </View>
+              <View style={styles.weekContainer}>
+                <Text style={styles.weekTitle}>Semana 2 (8-14 Mayo)</Text>
+                <Text style={styles.weekDetail}>✅ Lunes: Asistió</Text>
+                <Text style={styles.weekDetail}>✅ Martes: Asistió</Text>
+                <Text style={styles.weekDetail}>✅ Miércoles: Asistió</Text>
+                <Text style={styles.weekDetail}>✅ Jueves: Asistió</Text>
+                <Text style={styles.weekDetail}>❌ Viernes: Ausente</Text>
+              </View>
+            </View>
+          </View>
+        )}
+        {/* Calendarios */}
+        {activeMenuOption === 'Calendarios' && (
+          <View style={styles.card}>
+            <Text style={styles.sectionTitle}>Calendario Académico:</Text>
+            <View style={styles.eventContainer}>
+              <Text style={styles.subsectionTitle}>Eventos del Mes:</Text>
+              <View style={styles.eventDetail}>
+                <Text style={styles.eventIcon}>🗓️</Text>
+                <View style={styles.eventTextContainer}>
+                  <Text style={styles.eventTitle}>Prueba de Matemáticas</Text>
+                  <Text style={styles.eventDate}>10 Mayo - 9:00 AM</Text>
+                  <Text style={styles.eventDescription}>Examen Final de Matemáticas. Prepararse con ejercicios de álgebra y geometría.</Text>
+                </View>
+              </View>
+              <View style={styles.eventDetail}>
+                <Text style={styles.eventIcon}>🗓️</Text>
+                <View style={styles.eventTextContainer}>
+                  <Text style={styles.eventTitle}>Día del Estudiante</Text>
+                  <Text style={styles.eventDate}>15 Mayo - Todo el día</Text>
+                  <Text style={styles.eventDescription}>Actividades recreativas y conmemorativas. No se tendrá clases este día.</Text>
+                </View>
+              </View>
+              <View style={styles.eventDetail}>
+                <Text style={styles.eventIcon}>🗓️</Text>
+                <View style={styles.eventTextContainer}>
+                  <Text style={styles.eventTitle}>Entrega de Trabajos</Text>
+                  <Text style={styles.eventDate}>25 Mayo - 3:00 PM</Text>
+                  <Text style={styles.eventDescription}>Entrega de trabajos de Ciencias y Lenguaje. Revisa las instrucciones en los documentos compartidos.</Text>
+                </View>
+              </View>
+            </View>
+            <View style={styles.eventContainer}>
+              <Text style={styles.subsectionTitle}>Actividades Extracurriculares:</Text>
+              <View style={styles.eventDetail}>
+                <Text style={styles.eventIcon}>🎨</Text>
+                <View style={styles.eventTextContainer}>
+                  <Text style={styles.eventTitle}>Club de Arte</Text>
+                  <Text style={styles.eventDate}>Miércoles - 4:00 PM</Text>
+                  <Text style={styles.eventDescription}>Clase de pintura, cerámica y escultura. ¡Todos son bienvenidos!</Text>
+                </View>
+              </View>
+              <View style={styles.eventDetail}>
+                <Text style={styles.eventIcon}>⚽</Text>
+                <View style={styles.eventTextContainer}>
+                  <Text style={styles.eventTitle}>Fútbol - Equipo Escolar</Text>
+                  <Text style={styles.eventDate}>Lunes y Jueves - 5:00 PM</Text>
+                  <Text style={styles.eventDescription}>Entrenamiento del equipo de fútbol. ¡Ven a entrenar para el torneo intercolegial!</Text>
+                </View>
+              </View>
+              <View style={styles.eventDetail}>
+                <Text style={styles.eventIcon}>🎶</Text>
+                <View style={styles.eventTextContainer}>
+                  <Text style={styles.eventTitle}>Coral Escolar</Text>
+                  <Text style={styles.eventDate}>Martes - 4:00 PM</Text>
+                  <Text style={styles.eventDescription}>Prácticas para el concierto de fin de curso.</Text>
+                </View>
+              </View>
+            </View>
+            <View style={styles.eventContainer}>
+              <Text style={styles.subsectionTitle}>Próximos Eventos de la Semana:</Text>
+              <View style={styles.eventDetail}>
+                <Text style={styles.eventIcon}>🗓️</Text>
+                <View style={styles.eventTextContainer}>
+                  <Text style={styles.eventTitle}>Entrega de Tareas - Lenguaje</Text>
+                  <Text style={styles.eventDate}>Martes - 5:00 PM</Text>
+                </View>
+              </View>
+              <View style={styles.eventDetail}>
+                <Text style={styles.eventIcon}>🗓️</Text>
+                <View style={styles.eventTextContainer}>
+                  <Text style={styles.eventTitle}>Prueba de Historia</Text>
+                  <Text style={styles.eventDate}>Miércoles - 10:00 AM</Text>
+                </View>
+              </View>
+            </View>
+          </View>
+        )}
+        {/* Anotaciones */}
+        {activeMenuOption === 'Anotaciones' && (
+          <View style={styles.card}>
+            <Text style={styles.sectionTitle}>📒 Anotaciones del Estudiante</Text>
+            <View style={styles.eventContainer}>
+              <Text style={[styles.subsectionTitle, { color: '#2e7d32' }]}>😊 Anotaciones Positivas</Text>
+              <View style={styles.eventDetail}>
+                <Text style={styles.eventIcon}>✅</Text>
+                <View style={styles.eventTextContainer}>
+                  <Text style={styles.eventTitle}>Participación Destacada</Text>
+                  <Text style={styles.eventDate}>15 Mayo - Lenguaje</Text>
+                  <Text style={styles.eventDescription}>Participó activamente en clase con ideas claras y bien expresadas.</Text>
+                </View>
+              </View>
+              <View style={styles.eventDetail}>
+                <Text style={styles.eventIcon}>🌟</Text>
+                <View style={styles.eventTextContainer}>
+                  <Text style={styles.eventTitle}>Trabajo en Equipo</Text>
+                  <Text style={styles.eventDate}>17 Mayo - Ciencias</Text>
+                  <Text style={styles.eventDescription}>Colaboró de manera excelente con su grupo durante el experimento.</Text>
+                </View>
+              </View>
+              <View style={styles.eventDetail}>
+                <Text style={styles.eventIcon}>🎉</Text>
+                <View style={styles.eventTextContainer}>
+                  <Text style={styles.eventTitle}>Actitud Positiva</Text>
+                  <Text style={styles.eventDate}>20 Mayo - Tutoría</Text>
+                  <Text style={styles.eventDescription}>Mostró disposición y respeto hacia sus compañeros y docentes.</Text>
+                </View>
+              </View>
+            </View>
+            <View style={styles.eventContainer}>
+              <Text style={[styles.subsectionTitle, { color: '#c62828' }]}>⚠️ Anotaciones Negativas</Text>
+              <View style={styles.eventDetail}>
+                <Text style={styles.eventIcon}>🚫</Text>
+                <View style={styles.eventTextContainer}>
+                  <Text style={styles.eventTitle}>Tarea Incompleta</Text>
+                  <Text style={styles.eventDate}>13 Mayo - Matemáticas</Text>
+                  <Text style={styles.eventDescription}>No entregó la tarea asignada y no justificó su inasistencia.</Text>
+                </View>
+              </View>
+              <View style={styles.eventDetail}>
+                <Text style={styles.eventIcon}>❗</Text>
+                <View style={styles.eventTextContainer}>
+                  <Text style={styles.eventTitle}>Distracción en Clase</Text>
+                  <Text style={styles.eventDate}>18 Mayo - Historia</Text>
+                  <Text style={styles.eventDescription}>Estuvo usando el celular durante la clase sin autorización.</Text>
+                </View>
+              </View>
+              <View style={styles.eventDetail}>
+                <Text style={styles.eventIcon}>⚠️</Text>
+                <View style={styles.eventTextContainer}>
+                  <Text style={styles.eventTitle}>Falta de Respeto</Text>
+                  <Text style={styles.eventDate}>21 Mayo - Educación Física</Text>
+                  <Text style={styles.eventDescription}>Interrumpió constantemente al docente y a sus compañeros.</Text>
+                </View>
+              </View>
+            </View>
+          </View>
+        )}
+      </ScrollView>
+    </SafeAreaView>
+  </Modal>
+);
+
+// Modal de publicaciones de asignatura
+const SubjectPostsModal = ({
+  visible,
+  onClose,
+  selectedSubject,
+}: {
+  visible: boolean;
+  onClose: () => void;
+  selectedSubject: string | null;
+}) => (
+  <Modal visible={visible} animationType="slide" transparent={true}>
+    <SafeAreaView style={styles.modalContent}>
+      <View style={styles.modalHeader}>
+        <TouchableOpacity onPress={onClose} style={styles.backButton}>
+          <View style={styles.arrowButtonContainer}>
+            <Ionicons name="arrow-back" size={28} color="#007AFF" />
+          </View>
+        </TouchableOpacity>
+        <Text style={styles.modalTitle}>{selectedSubject}</Text>
+      </View>
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>📝 Últimas publicaciones</Text>
+          <View style={styles.publicationItem}>
+            <Text style={styles.publicationIcon}>📢</Text>
+            <View style={styles.publicationTextContainer}>
+              <Text style={styles.publicationTitle}>Tarea para el viernes</Text>
+              <Text style={styles.publicationSubtitle}>No olvides entregar el ejercicio 4 antes del viernes a las 18:00 hrs.</Text>
+            </View>
+          </View>
+          <View style={styles.publicationItem}>
+            <Text style={styles.publicationIcon}>📚</Text>
+            <View style={styles.publicationTextContainer}>
+              <Text style={styles.publicationTitle}>Material de estudio</Text>
+              <Text style={styles.publicationSubtitle}>Ya está disponible el nuevo PDF sobre geometría en la sección de recursos.</Text>
+            </View>
+          </View>
+          <View style={styles.publicationItem}>
+            <Text style={styles.publicationIcon}>🧪</Text>
+            <View style={styles.publicationTextContainer}>
+              <Text style={styles.publicationTitle}>Revisión de pruebas</Text>
+              <Text style={styles.publicationSubtitle}>La revisión de la prueba será el miércoles durante la clase habitual.</Text>
+            </View>
+          </View>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  </Modal>
+);
+
+// --- COMPONENTE PRINCIPAL ---
 export default function HomeScreen() {
   const [posts, setPosts] = useState<Post[]>(samplePosts);
   const [selectedUser, setSelectedUser] = useState<Post['user'] | null>(null);
@@ -143,6 +738,7 @@ export default function HomeScreen() {
   const [isSubjectPostsModalVisible, setIsSubjectPostsModalVisible] = useState(false);
   const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
 
+  // --- Funciones de lógica ---
   const handleCreatePost = () => {
     if (!newPostContent.trim()) return;
     const newPost: Post = {
@@ -178,7 +774,6 @@ export default function HomeScreen() {
 
   const handleAddComment = () => {
     if (!newCommentText.trim() || commentingPostId === null) return;
-
     setPosts(posts.map(post => {
       if (post.id === commentingPostId) {
         const newComment: Comment = {
@@ -196,7 +791,6 @@ export default function HomeScreen() {
       }
       return post;
     }));
-
     setNewCommentText('');
     setCommentingPostId(null);
   };
@@ -207,7 +801,7 @@ export default function HomeScreen() {
 
   const openSidebar = () => {
     Animated.timing(sidebarAnim, {
-      toValue: 0, // Desliza hacia posición 0 (completo en pantalla)
+      toValue: 0,
       duration: 300,
       useNativeDriver: false,
     }).start();
@@ -216,121 +810,55 @@ export default function HomeScreen() {
 
   const closeSidebar = () => {
     Animated.timing(sidebarAnim, {
-      toValue: screenWidth, // Vuelve a salir hacia la derecha
+      toValue: screenWidth,
       duration: 300,
       useNativeDriver: false,
     }).start(() => setShowSidebar(false));
   };
 
   const handleMenuOptionPress = (option: string) => {
-    closeSidebar(); // Cierra el menú
-    setActiveMenuOption(option); // Guarda la opción seleccionada
-    setIsMenuModalVisible(true); // Muestra el modal
+    closeSidebar();
+    setActiveMenuOption(option);
+    setIsMenuModalVisible(true);
   };
 
   const openSubjectPostsModal = (subjectName: string) => {
     setSelectedSubject(subjectName);
-    setIsMenuModalVisible(false); // Cierra el modal de asignaturas
-
-    // Abrir el modal de publicaciones con pequeño delay para evitar el "salto"
+    setIsMenuModalVisible(false);
     setTimeout(() => {
       setIsSubjectPostsModalVisible(true);
-    }, 300); // Ajusta el tiempo si es necesario
+    }, 300);
   };
 
   const closeSubjectPostsModal = () => {
-    // Cerrar el modal de publicaciones
     setIsSubjectPostsModalVisible(false);
-
-    // Usamos otro timeout para esperar a que el modal de publicaciones se cierre completamente
     setTimeout(() => {
-      // Abrir el modal de asignaturas después de un pequeño retraso
-      setIsMenuModalVisible(true); // Vuelve a abrir el modal de asignaturas
-      setActiveMenuOption('Mis Asignaturas'); // Resetea la opción activa del menú
-    }, 300); // Este tiempo debería ser lo suficientemente largo para que la animación de cierre se complete
+      setIsMenuModalVisible(true);
+      setActiveMenuOption('Mis Asignaturas');
+    }, 300);
   };
 
-
-  const renderComment = ({ item }: { item: Comment }) => (
-    <View style={styles.commentContainer}>
-      <TouchableOpacity onPress={() => setSelectedUser(item.user)}>
-        <Image source={{ uri: item.user.avatar }} style={styles.commentAvatar} />
-      </TouchableOpacity>
-      <TouchableOpacity onPress={() => setSelectedUser(item.user)} style={styles.commentBubble}>
-        <Text style={styles.commentName}>{item.user.name}</Text>
-        <Text>{item.text}</Text>
-      </TouchableOpacity>
-    </View>
-  );
-
+  // --- Renderizado de posts y comentarios ---
   const renderPost = ({ item }: { item: Post }, isProfileView = false) => (
-    <View style={styles.postCard}>
-      <TouchableOpacity onPress={() => setSelectedUser(item.user)} style={styles.postHeader}>
-        <Image source={{ uri: item.user.avatar }} style={styles.postAvatar} />
-        <Text style={styles.postUsername}>{item.user.name}</Text>
-      </TouchableOpacity>
-      <Text style={styles.postContent}>{item.content}</Text>
-      {item.image && (
-        <Image
-          source={{ uri: item.image }}
-          style={styles.postImage}
-          resizeMode="cover"
-        />
-      )}
-      <View style={styles.likeContainer}>
-        <TouchableOpacity onPress={() => toggleLike(item.id)} style={styles.likeButton}>
-          <Ionicons
-            name={item.likedByUser ? 'heart' : 'heart-outline'}
-            size={24}
-            color={item.likedByUser ? '#e0245e' : '#555'}
-          />
-          <Text style={styles.likeCount}>{item.likes}</Text>
-        </TouchableOpacity>
-        {isProfileView && (
-          <TouchableOpacity
-            onPress={() => handleDeletePost(item.id)}
-            style={styles.deleteButton}
-          >
-            <Text style={{ color: 'red', marginLeft: 15 }}>Eliminar</Text>
-          </TouchableOpacity>
-        )}
-      </View>
-      <FlatList
-        data={item.comments}
-        keyExtractor={(comment) => comment.id.toString()}
-        renderItem={renderComment}
-        scrollEnabled={false}
-        style={styles.commentsList}
-      />
-      {commentingPostId === item.id ? (
-        <View style={styles.addCommentContainer}>
-          <Image
-            source={{ uri: 'https://i.pravatar.cc/150?img=10' }}
-            style={styles.commentAvatar}
-          />
-          <TextInput
-            placeholder="Escribe un comentario..."
-            value={newCommentText}
-            onChangeText={setNewCommentText}
-            style={[styles.commentInput, { marginLeft: 8 }]}
-          />
-          <TouchableOpacity onPress={handleAddComment} style={styles.sendCommentButton}>
-            <Ionicons name="send" size={24} color="#007AFF" />
-          </TouchableOpacity>
-        </View>
-      ) : (
-        <TouchableOpacity onPress={() => setCommentingPostId(item.id)} style={styles.addCommentButton}>
-          <Text style={{ color: '#007AFF' }}>Agregar comentario</Text>
-        </TouchableOpacity>
-      )}
-    </View>
+    <PostCard
+      item={item}
+      onUserPress={setSelectedUser}
+      onLike={toggleLike}
+      onDelete={handleDeletePost}
+      onAddCommentPress={setCommentingPostId}
+      onSendComment={handleAddComment}
+      commentingPostId={commentingPostId}
+      newCommentText={newCommentText}
+      setNewCommentText={setNewCommentText}
+      isProfileView={isProfileView}
+    />
   );
-
 
   const userPosts = selectedUser
     ? posts.filter(post => post.user.name === selectedUser.name)
     : [];
 
+  // --- Render principal ---
   return (
     <SafeAreaView style={styles.container}>
       <View style={{ padding: 10 }}>
@@ -344,483 +872,41 @@ export default function HomeScreen() {
         renderItem={renderPost}
         contentContainerStyle={styles.postsContainer}
       />
-
       <TouchableOpacity onPress={() => setShowCreatePostModal(true)} style={styles.fab}>
         <Ionicons name="add" size={30} color="white" />
       </TouchableOpacity>
-
-      <Modal visible={!!selectedUser} animationType="slide">
-        <SafeAreaView style={styles.modalContainer}>
-          <TouchableOpacity onPress={() => setSelectedUser(null)} style={styles.modalBack}>
-            <Ionicons name="arrow-back" size={28} color="black" />
-          </TouchableOpacity>
-          {selectedUser && (
-            <ScrollView>
-              <View style={styles.profileInfo}>
-                <Image source={{ uri: selectedUser.avatar }} style={styles.profileAvatar} />
-                <Text style={styles.profileName}>{selectedUser.name}</Text>
-                {selectedUser.bio && <Text style={styles.profileBio}>{selectedUser.bio}</Text>}
-                <View style={styles.profileButtonsContainer}>
-                  <TouchableOpacity style={styles.profileButton}>
-                    <Text style={styles.profileButtonText}>Agregar</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={styles.profileButton}>
-                    <Text style={styles.profileButtonText}>Seguir</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={styles.profileButton}>
-                    <Text style={styles.profileButtonText}>Reportar</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-              <FlatList
-                data={userPosts}
-                keyExtractor={(item) => item.id.toString()}
-                renderItem={({ item }) => renderPost({ item }, true)} // <-- Aquí debe ir true
-              />
-            </ScrollView>
-          )}
-        </SafeAreaView>
-      </Modal>
-
-      <Modal visible={showCreatePostModal} animationType="slide">
-        <SafeAreaView style={styles.modalContainer}>
-          <View style={styles.createPostModalContent}>
-            <Text style={styles.createPostTitle}>Crear nuevo post</Text>
-            <TextInput
-              multiline
-              placeholder="¿Qué quieres compartir?"
-              value={newPostContent}
-              onChangeText={setNewPostContent}
-              style={styles.createPostInput}
-            />
-            <View style={styles.createPostButtons}>
-              <TouchableOpacity onPress={() => setShowCreatePostModal(false)} style={[styles.modalButton, { backgroundColor: '#ccc' }]}>
-                <Text>Cancelar</Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={handleCreatePost} style={[styles.modalButton, { backgroundColor: '#007AFF' }]}>
-                <Text style={{ color: 'white' }}>Publicar</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </SafeAreaView>
-      </Modal>
-      {showSidebar && (
-        <SafeAreaView style={StyleSheet.absoluteFill}>
-          <TouchableOpacity
-            activeOpacity={1}
-            onPress={closeSidebar}
-            style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.3)' }}
-          >
-            <Animated.View
-              style={[
-                styles.sidebarRight,
-                {
-                  right: 0,
-                  transform: [{ translateX: sidebarAnim }],
-                },
-              ]}
-            >
-              <Text style={styles.sidebarTitle}>Menú</Text>
-              <TouchableOpacity onPress={() => handleMenuOptionPress('Mis Asignaturas')} style={styles.sidebarItem}>
-                <Ionicons name="book-outline" size={22} color="#333" style={styles.sidebarIcon} />
-                <Text style={styles.sidebarText}>Mis Asignaturas</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity onPress={() => handleMenuOptionPress('Notas')} style={styles.sidebarItem}>
-                <Ionicons name="document-text-outline" size={22} color="#333" style={styles.sidebarIcon} />
-                <Text style={styles.sidebarText}>Notas</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity onPress={() => handleMenuOptionPress('Asistencias')} style={styles.sidebarItem}>
-                <Ionicons name="checkmark-done-outline" size={22} color="#333" style={styles.sidebarIcon} />
-                <Text style={styles.sidebarText}>Asistencias</Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => handleMenuOptionPress('Anotaciones')} style={styles.sidebarItem}>
-                <Ionicons name="create-outline" size={22} color="#333" style={styles.sidebarIcon} />
-                <Text style={styles.sidebarText}>Anotaciones</Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => handleMenuOptionPress('Calendarios')} style={styles.sidebarItem}>
-                <Ionicons name="calendar-outline" size={22} color="#333" style={styles.sidebarIcon} />
-                <Text style={styles.sidebarText}>Calendarios</Text>
-              </TouchableOpacity>
-            </Animated.View>
-          </TouchableOpacity>
-        </SafeAreaView>
-      )}
-      <Modal visible={isMenuModalVisible} animationType="slide">
-        <SafeAreaView style={styles.modalContent}>
-          {/* Header del Modal */}
-          <View style={styles.modalHeader}>
-            <TouchableOpacity onPress={() => setIsMenuModalVisible(false)} style={styles.backButton}>
-              <View style={styles.arrowButtonContainer}>
-                <Ionicons name="arrow-back" size={28} color="#007AFF" />
-              </View>
-            </TouchableOpacity>
-            <Text style={styles.modalTitle}>{activeMenuOption}</Text>
-          </View>
-
-          {/* Contenido del Modal */}
-          <ScrollView contentContainerStyle={styles.scrollContainer}>
-            {/* Mis Asignaturas */}
-            {activeMenuOption === 'Mis Asignaturas' && (
-              <View style={styles.card}>
-                <Text style={styles.sectionTitle}>Asignaturas Inscritas:</Text>
-
-                {/* Asignatura Matemáticas */}
-                <View style={styles.noteContainer}>
-                  <TouchableOpacity onPress={() => openSubjectPostsModal('Matemáticas')}>
-                    <Text style={styles.noteItem}>📘 <Text style={styles.subject}>Matemáticas</Text></Text>
-                  </TouchableOpacity>
-                  <View style={styles.detailContainer}>
-                    <Text style={styles.detail}>👨‍🏫 Profesor: Prof. Juan Pérez</Text>
-                    <Text style={styles.detail}>📅 Horarios:</Text>
-                    <Text style={styles.detail}>- Lunes: 8:00 AM a 10:00 AM</Text>
-                    <Text style={styles.detail}>- Martes: 9:00 AM a 11:00 AM</Text>
-                    <Text style={styles.detail}>- Miércoles: 8:00 AM a 10:00 AM</Text>
-                  </View>
-                </View>
-
-                {/* Asignatura Historia */}
-                <View style={styles.noteContainer}>
-                  <TouchableOpacity onPress={() => openSubjectPostsModal('Historia')}>
-                    <Text style={styles.noteItem}>📗 <Text style={styles.subject}>Historia</Text></Text>
-                  </TouchableOpacity>
-                  <View style={styles.detailContainer}>
-                    <Text style={styles.detail}>👨‍🏫 Profesor: Prof. Laura Gómez</Text>
-                    <Text style={styles.detail}>📅 Horarios:</Text>
-                    <Text style={styles.detail}>- Lunes: 10:30 AM a 12:30 PM</Text>
-                    <Text style={styles.detail}>- Jueves: 9:00 AM a 11:00 AM</Text>
-                  </View>
-                </View>
-
-                {/* Asignatura Ciencias */}
-                <View style={styles.noteContainer}>
-                  <TouchableOpacity onPress={() => openSubjectPostsModal('Ciencias')}>
-                    <Text style={styles.noteItem}>📙 <Text style={styles.subject}>Ciencias</Text></Text>
-                  </TouchableOpacity>
-                  <View style={styles.detailContainer}>
-                    <Text style={styles.detail}>👨‍🏫 Profesor: Prof. Manuel Rodríguez</Text>
-                    <Text style={styles.detail}>📅 Horarios:</Text>
-                    <Text style={styles.detail}>- Martes: 2:00 PM a 4:00 PM</Text>
-                    <Text style={styles.detail}>- Viernes: 3:00 PM a 5:00 PM</Text>
-                  </View>
-                </View>
-
-                {/* Asignatura Lenguaje */}
-                <View style={styles.noteContainer}>
-                  <TouchableOpacity onPress={() => openSubjectPostsModal('Lenguaje')}>
-                    <Text style={styles.noteItem}>📕 <Text style={styles.subject}>Lenguaje</Text></Text>
-                  </TouchableOpacity>
-                  <View style={styles.detailContainer}>
-                    <Text style={styles.detail}>👨‍🏫 Profesor: Prof. Sandra Molina</Text>
-                    <Text style={styles.detail}>📅 Horarios:</Text>
-                    <Text style={styles.detail}>- Miércoles: 9:00 AM a 11:00 AM</Text>
-                    <Text style={styles.detail}>- Viernes: 10:00 AM a 12:00 PM</Text>
-                  </View>
-                </View>
-              </View>
-            )}
-
-            {/* Notas con Detalles */}
-            {activeMenuOption === 'Notas' && (
-              <View style={styles.card}>
-                <Text style={styles.sectionTitle}>Notas:</Text>
-
-                {/* Notas de Matemáticas */}
-                <View style={styles.noteContainer}>
-                  <Text style={styles.noteItem}>📘 <Text style={styles.subject}>Matemáticas:</Text></Text>
-                  <View style={styles.detailContainer}>
-                    <Text style={styles.detail}>📝 Examen Final: 7.0</Text>
-                    <Text style={styles.detail}>📚 Tareas: 6.5</Text>
-                    <Text style={styles.detail}>👨‍🏫 Participación: 6.0</Text>
-                    <Text style={styles.detail}>🔄 Recuperación: 6.8</Text>
-                  </View>
-                </View>
-
-                {/* Notas de Historia */}
-                <View style={styles.noteContainer}>
-                  <Text style={styles.noteItem}>📗 <Text style={styles.subject}>Historia:</Text></Text>
-                  <View style={styles.detailContainer}>
-                    <Text style={styles.detail}>📝 Examen Final: 6.5</Text>
-                    <Text style={styles.detail}>📚 Tareas: 7.0</Text>
-                    <Text style={styles.detail}>👨‍🏫 Participación: 6.8</Text>
-                    <Text style={styles.detail}>🔄 Recuperación: 7.0</Text>
-                  </View>
-                </View>
-
-                {/* Notas de Ciencias */}
-                <View style={styles.noteContainer}>
-                  <Text style={styles.noteItem}>📙 <Text style={styles.subject}>Ciencias:</Text></Text>
-                  <View style={styles.detailContainer}>
-                    <Text style={styles.detail}>📝 Examen Final: 5.8</Text>
-                    <Text style={styles.detail}>📚 Tareas: 5.5</Text>
-                    <Text style={styles.detail}>👨‍🏫 Participación: 6.0</Text>
-                    <Text style={styles.detail}>🔄 Recuperación: 6.0</Text>
-                  </View>
-                </View>
-
-                {/* Notas de Lenguaje */}
-                <View style={styles.noteContainer}>
-                  <Text style={styles.noteItem}>📕 <Text style={styles.subject}>Lenguaje:</Text></Text>
-                  <View style={styles.detailContainer}>
-                    <Text style={styles.detail}>📝 Examen Final: 7.0</Text>
-                    <Text style={styles.detail}>📚 Tareas: 6.5</Text>
-                    <Text style={styles.detail}>👨‍🏫 Participación: 6.2</Text>
-                    <Text style={styles.detail}>🔄 Recuperación: 6.8</Text>
-                  </View>
-                </View>
-
-                {/* Promedio de todas las asignaturas */}
-                <Text style={styles.average}>Promedio: 6.7</Text>
-              </View>
-            )}
-
-            {/* Asistencias */}
-            {activeMenuOption === 'Asistencias' && (
-              <View style={styles.card}>
-                <Text style={styles.sectionTitle}>Resumen de Asistencias:</Text>
-
-                {/* Resumen General de Asistencias */}
-                <View style={styles.attendanceContainer}>
-                  <Text style={styles.attendanceDetail}>✅ Asistencias: <Text style={styles.attendanceValue}>42</Text></Text>
-                  <Text style={styles.attendanceDetail}>❌ Ausencias: <Text style={styles.attendanceValue}>3</Text></Text>
-                  <Text style={styles.attendanceDetail}>⏳ Atrasos: <Text style={styles.attendanceValue}>2</Text></Text>
-                </View>
-
-                {/* Resumen Semanal de Asistencias */}
-                <Text style={styles.sectionTitle}>Asistencias por Semana:</Text>
-
-                <View style={styles.weeklyAttendance}>
-                  {/* Semana 1 */}
-                  <View style={styles.weekContainer}>
-                    <Text style={styles.weekTitle}>Semana 1 (1-7 Mayo)</Text>
-                    <Text style={styles.weekDetail}>✅ Lunes: Asistió</Text>
-                    <Text style={styles.weekDetail}>✅ Martes: Asistió</Text>
-                    <Text style={styles.weekDetail}>❌ Miércoles: Ausente</Text>
-                    <Text style={styles.weekDetail}>✅ Jueves: Asistió</Text>
-                    <Text style={styles.weekDetail}>✅ Viernes: Asistió</Text>
-                  </View>
-
-                  {/* Semana 2 */}
-                  <View style={styles.weekContainer}>
-                    <Text style={styles.weekTitle}>Semana 2 (8-14 Mayo)</Text>
-                    <Text style={styles.weekDetail}>✅ Lunes: Asistió</Text>
-                    <Text style={styles.weekDetail}>✅ Martes: Asistió</Text>
-                    <Text style={styles.weekDetail}>✅ Miércoles: Asistió</Text>
-                    <Text style={styles.weekDetail}>✅ Jueves: Asistió</Text>
-                    <Text style={styles.weekDetail}>❌ Viernes: Ausente</Text>
-                  </View>
-                </View>
-              </View>
-            )}
-
-            {/* Calendarios */}
-            {activeMenuOption === 'Calendarios' && (
-              <View style={styles.card}>
-                <Text style={styles.sectionTitle}>Calendario Académico:</Text>
-
-                {/* Eventos del Mes */}
-                <View style={styles.eventContainer}>
-                  <Text style={styles.subsectionTitle}>Eventos del Mes:</Text>
-
-                  <View style={styles.eventDetail}>
-                    <Text style={styles.eventIcon}>🗓️</Text>
-                    <View style={styles.eventTextContainer}>
-                      <Text style={styles.eventTitle}>Prueba de Matemáticas</Text>
-                      <Text style={styles.eventDate}>10 Mayo - 9:00 AM</Text>
-                      <Text style={styles.eventDescription}>Examen Final de Matemáticas. Prepararse con ejercicios de álgebra y geometría.</Text>
-                    </View>
-                  </View>
-
-                  <View style={styles.eventDetail}>
-                    <Text style={styles.eventIcon}>🗓️</Text>
-                    <View style={styles.eventTextContainer}>
-                      <Text style={styles.eventTitle}>Día del Estudiante</Text>
-                      <Text style={styles.eventDate}>15 Mayo - Todo el día</Text>
-                      <Text style={styles.eventDescription}>Actividades recreativas y conmemorativas. No se tendrá clases este día.</Text>
-                    </View>
-                  </View>
-
-                  <View style={styles.eventDetail}>
-                    <Text style={styles.eventIcon}>🗓️</Text>
-                    <View style={styles.eventTextContainer}>
-                      <Text style={styles.eventTitle}>Entrega de Trabajos</Text>
-                      <Text style={styles.eventDate}>25 Mayo - 3:00 PM</Text>
-                      <Text style={styles.eventDescription}>Entrega de trabajos de Ciencias y Lenguaje. Revisa las instrucciones en los documentos compartidos.</Text>
-                    </View>
-                  </View>
-                </View>
-
-                {/* Actividades Extracurriculares */}
-                <View style={styles.eventContainer}>
-                  <Text style={styles.subsectionTitle}>Actividades Extracurriculares:</Text>
-
-                  <View style={styles.eventDetail}>
-                    <Text style={styles.eventIcon}>🎨</Text>
-                    <View style={styles.eventTextContainer}>
-                      <Text style={styles.eventTitle}>Club de Arte</Text>
-                      <Text style={styles.eventDate}>Miércoles - 4:00 PM</Text>
-                      <Text style={styles.eventDescription}>Clase de pintura, cerámica y escultura. ¡Todos son bienvenidos!</Text>
-                    </View>
-                  </View>
-
-                  <View style={styles.eventDetail}>
-                    <Text style={styles.eventIcon}>⚽</Text>
-                    <View style={styles.eventTextContainer}>
-                      <Text style={styles.eventTitle}>Fútbol - Equipo Escolar</Text>
-                      <Text style={styles.eventDate}>Lunes y Jueves - 5:00 PM</Text>
-                      <Text style={styles.eventDescription}>Entrenamiento del equipo de fútbol. ¡Ven a entrenar para el torneo intercolegial!</Text>
-                    </View>
-                  </View>
-
-                  <View style={styles.eventDetail}>
-                    <Text style={styles.eventIcon}>🎶</Text>
-                    <View style={styles.eventTextContainer}>
-                      <Text style={styles.eventTitle}>Coral Escolar</Text>
-                      <Text style={styles.eventDate}>Martes - 4:00 PM</Text>
-                      <Text style={styles.eventDescription}>Prácticas para el concierto de fin de curso.</Text>
-                    </View>
-                  </View>
-                </View>
-
-                {/* Próximos Eventos de la Semana */}
-                <View style={styles.eventContainer}>
-                  <Text style={styles.subsectionTitle}>Próximos Eventos de la Semana:</Text>
-
-                  <View style={styles.eventDetail}>
-                    <Text style={styles.eventIcon}>🗓️</Text>
-                    <View style={styles.eventTextContainer}>
-                      <Text style={styles.eventTitle}>Entrega de Tareas - Lenguaje</Text>
-                      <Text style={styles.eventDate}>Martes - 5:00 PM</Text>
-                    </View>
-                  </View>
-
-                  <View style={styles.eventDetail}>
-                    <Text style={styles.eventIcon}>🗓️</Text>
-                    <View style={styles.eventTextContainer}>
-                      <Text style={styles.eventTitle}>Prueba de Historia</Text>
-                      <Text style={styles.eventDate}>Miércoles - 10:00 AM</Text>
-                    </View>
-                  </View>
-                </View>
-              </View>
-            )}
-            {activeMenuOption === 'Anotaciones' && (
-              <View style={styles.card}>
-                <Text style={styles.sectionTitle}>📒 Anotaciones del Estudiante</Text>
-
-                {/* Anotaciones Positivas */}
-                <View style={styles.eventContainer}>
-                  <Text style={[styles.subsectionTitle, { color: '#2e7d32' }]}>😊 Anotaciones Positivas</Text>
-
-                  <View style={styles.eventDetail}>
-                    <Text style={styles.eventIcon}>✅</Text>
-                    <View style={styles.eventTextContainer}>
-                      <Text style={styles.eventTitle}>Participación Destacada</Text>
-                      <Text style={styles.eventDate}>15 Mayo - Lenguaje</Text>
-                      <Text style={styles.eventDescription}>Participó activamente en clase con ideas claras y bien expresadas.</Text>
-                    </View>
-                  </View>
-
-                  <View style={styles.eventDetail}>
-                    <Text style={styles.eventIcon}>🌟</Text>
-                    <View style={styles.eventTextContainer}>
-                      <Text style={styles.eventTitle}>Trabajo en Equipo</Text>
-                      <Text style={styles.eventDate}>17 Mayo - Ciencias</Text>
-                      <Text style={styles.eventDescription}>Colaboró de manera excelente con su grupo durante el experimento.</Text>
-                    </View>
-                  </View>
-
-                  <View style={styles.eventDetail}>
-                    <Text style={styles.eventIcon}>🎉</Text>
-                    <View style={styles.eventTextContainer}>
-                      <Text style={styles.eventTitle}>Actitud Positiva</Text>
-                      <Text style={styles.eventDate}>20 Mayo - Tutoría</Text>
-                      <Text style={styles.eventDescription}>Mostró disposición y respeto hacia sus compañeros y docentes.</Text>
-                    </View>
-                  </View>
-                </View>
-
-                {/* Anotaciones Negativas */}
-                <View style={styles.eventContainer}>
-                  <Text style={[styles.subsectionTitle, { color: '#c62828' }]}>⚠️ Anotaciones Negativas</Text>
-
-                  <View style={styles.eventDetail}>
-                    <Text style={styles.eventIcon}>🚫</Text>
-                    <View style={styles.eventTextContainer}>
-                      <Text style={styles.eventTitle}>Tarea Incompleta</Text>
-                      <Text style={styles.eventDate}>13 Mayo - Matemáticas</Text>
-                      <Text style={styles.eventDescription}>No entregó la tarea asignada y no justificó su inasistencia.</Text>
-                    </View>
-                  </View>
-
-                  <View style={styles.eventDetail}>
-                    <Text style={styles.eventIcon}>❗</Text>
-                    <View style={styles.eventTextContainer}>
-                      <Text style={styles.eventTitle}>Distracción en Clase</Text>
-                      <Text style={styles.eventDate}>18 Mayo - Historia</Text>
-                      <Text style={styles.eventDescription}>Estuvo usando el celular durante la clase sin autorización.</Text>
-                    </View>
-                  </View>
-
-                  <View style={styles.eventDetail}>
-                    <Text style={styles.eventIcon}>⚠️</Text>
-                    <View style={styles.eventTextContainer}>
-                      <Text style={styles.eventTitle}>Falta de Respeto</Text>
-                      <Text style={styles.eventDate}>21 Mayo - Educación Física</Text>
-                      <Text style={styles.eventDescription}>Interrumpió constantemente al docente y a sus compañeros.</Text>
-                    </View>
-                  </View>
-                </View>
-              </View>
-            )}
-          </ScrollView>
-        </SafeAreaView>
-      </Modal>
-
-      {/* Modal de Publicaciones */}
-      <Modal visible={isSubjectPostsModalVisible} animationType="slide" transparent={true}>
-        <SafeAreaView style={styles.modalContent}>
-          <View style={styles.modalHeader}>
-            <TouchableOpacity onPress={closeSubjectPostsModal} style={styles.backButton}>
-              <View style={styles.arrowButtonContainer}>
-                <Ionicons name="arrow-back" size={28} color="#007AFF" />
-              </View>
-            </TouchableOpacity>
-            <Text style={styles.modalTitle}>{selectedSubject}</Text>
-          </View>
-
-          <ScrollView contentContainerStyle={styles.scrollContainer}>
-            <View style={styles.card}>
-              <Text style={styles.sectionTitle}>📝 Últimas publicaciones</Text>
-
-              <View style={styles.publicationItem}>
-                <Text style={styles.publicationIcon}>📢</Text>
-                <View style={styles.publicationTextContainer}>
-                  <Text style={styles.publicationTitle}>Tarea para el viernes</Text>
-                  <Text style={styles.publicationSubtitle}>No olvides entregar el ejercicio 4 antes del viernes a las 18:00 hrs.</Text>
-                </View>
-              </View>
-
-              <View style={styles.publicationItem}>
-                <Text style={styles.publicationIcon}>📚</Text>
-                <View style={styles.publicationTextContainer}>
-                  <Text style={styles.publicationTitle}>Material de estudio</Text>
-                  <Text style={styles.publicationSubtitle}>Ya está disponible el nuevo PDF sobre geometría en la sección de recursos.</Text>
-                </View>
-              </View>
-
-              <View style={styles.publicationItem}>
-                <Text style={styles.publicationIcon}>🧪</Text>
-                <View style={styles.publicationTextContainer}>
-                  <Text style={styles.publicationTitle}>Revisión de pruebas</Text>
-                  <Text style={styles.publicationSubtitle}>La revisión de la prueba será el miércoles durante la clase habitual.</Text>
-                </View>
-              </View>
-            </View>
-          </ScrollView>
-        </SafeAreaView>
-      </Modal>
+      <UserProfileModal
+        visible={!!selectedUser}
+        user={selectedUser}
+        onClose={() => setSelectedUser(null)}
+        userPosts={userPosts}
+        renderPost={renderPost}
+      />
+      <CreatePostModal
+        visible={showCreatePostModal}
+        onClose={() => setShowCreatePostModal(false)}
+        onCreate={handleCreatePost}
+        newPostContent={newPostContent}
+        setNewPostContent={setNewPostContent}
+      />
+      <Sidebar
+        visible={showSidebar}
+        sidebarAnim={sidebarAnim}
+        closeSidebar={closeSidebar}
+        handleMenuOptionPress={handleMenuOptionPress}
+      />
+      <MenuModal
+        visible={isMenuModalVisible}
+        onClose={() => setIsMenuModalVisible(false)}
+        activeMenuOption={activeMenuOption}
+        setActiveMenuOption={setActiveMenuOption}
+        openSubjectPostsModal={openSubjectPostsModal}
+      />
+      <SubjectPostsModal
+        visible={isSubjectPostsModalVisible}
+        onClose={closeSubjectPostsModal}
+        selectedSubject={selectedSubject}
+      />
     </SafeAreaView>
   );
 }
