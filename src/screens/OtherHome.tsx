@@ -44,88 +44,88 @@ const samplePosts: Post[] = [
   {
     id: 1,
     user: {
-      name: 'Dirección Colegio San Martín',
-      avatar: 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png',
-      bio: 'Comunicados oficiales y novedades del colegio',
+      name: 'Juan Pérez',
+      avatar: 'https://randomuser.me/api/portraits/men/1.jpg',
+      bio: 'Amante del café ☕ | Viajero 🌍',
     },
-    content: 'Estimados apoderados y estudiantes, recordamos que el lunes 27 no habrá clases por motivo de capacitación docente.',
-    image: 'https://images.unsplash.com/photo-1503676382389-4809596d5290?auto=format&fit=crop&w=800&q=80',
-    comments: [
-      {
-        id: 1,
-        user: {
-          name: 'María González',
-          avatar: 'https://randomuser.me/api/portraits/women/2.jpg',
-        },
-        text: '¡Gracias por avisar!',
-      },
-    ],
-    likes: 12,
-    likedByUser: false,
-  },
-  {
-    id: 2,
-    user: {
-      name: 'Dirección Colegio San Martín',
-      avatar: 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png',
-      bio: 'Comunicados oficiales y novedades del colegio',
-    },
-    content: 'Felicitamos a todos los estudiantes que participaron en la feria científica. ¡Gran trabajo en equipo!',
-    image: 'https://images.unsplash.com/photo-1464983953574-0892a716854b?auto=format&fit=crop&w=800&q=80',
-    comments: [
-      {
-        id: 1,
-        user: {
-          name: 'Pedro Ruiz',
-          avatar: 'https://randomuser.me/api/portraits/men/5.jpg',
-        },
-        text: '¡Fue una experiencia increíble!',
-      },
-    ],
-    likes: 20,
-    likedByUser: false,
-  },
-  {
-    id: 3,
-    user: {
-      name: 'Dirección Colegio San Martín',
-      avatar: 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png',
-      bio: 'Comunicados oficiales y novedades del colegio',
-    },
-    content: 'Se informa que la próxima semana se realizará la vacunación escolar para los cursos de 1° a 4° básico.',
-    image: 'https://images.unsplash.com/photo-1513258496099-48168024aec0?auto=format&fit=crop&w=800&q=80',
-    comments: [],
-    likes: 7,
-    likedByUser: false,
-  },
-  {
-    id: 4,
-    user: {
-      name: 'Dirección Colegio San Martín',
-      avatar: 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png',
-      bio: 'Comunicados oficiales y novedades del colegio',
-    },
-    content: 'Invitamos a toda la comunidad educativa a la reunión de apoderados el jueves 30 a las 19:00 hrs en el gimnasio del colegio.',
-    image: 'https://images.unsplash.com/photo-1503676382389-4809596d5290?auto=format&fit=crop&w=800&q=80',
+    content: '¡Hola a todos! Este es mi primer post aquí.',
+    image: 'https://picsum.photos/id/1015/600/400',
     comments: [
       {
         id: 1,
         user: {
           name: 'Ana Gómez',
+          avatar: 'https://randomuser.me/api/portraits/women/2.jpg',
+        },
+        text: '¡Bienvenido Juan!',
+      },
+    ],
+    likes: 5,
+    likedByUser: false,
+  },
+  {
+    id: 2,
+    user: {
+      name: 'Lucía Fernández',
+      avatar: 'https://randomuser.me/api/portraits/women/3.jpg',
+      bio: 'Diseñadora UX 🎨',
+    },
+    content: '¡Miren esta vista desde mi ventana! 🌄',
+    image: 'https://picsum.photos/id/1043/600/400',
+    comments: [
+      {
+        id: 1,
+        user: {
+          name: 'Carlos Méndez',
+          avatar: 'https://randomuser.me/api/portraits/men/4.jpg',
+        },
+        text: 'Wow, qué lugar tan hermoso!',
+      },
+    ],
+    likes: 10,
+    likedByUser: false,
+  },
+  {
+    id: 3,
+    user: {
+      name: 'Pedro Ruiz',
+      avatar: 'https://randomuser.me/api/portraits/men/5.jpg',
+      bio: 'Tech lover 💻📱',
+    },
+    content: 'Probando mi nueva cámara 📷',
+    image: 'https://picsum.photos/id/237/600/400',
+    comments: [],
+    likes: 2,
+    likedByUser: false,
+  },
+  {
+    id: 4,
+    user: {
+      name: 'Sofía Martínez',
+      avatar: 'https://randomuser.me/api/portraits/women/6.jpg',
+      bio: 'Fotógrafa y viajera ✈️',
+    },
+    content: 'Una de mis fotos favoritas en París ❤️',
+    image: 'https://picsum.photos/id/1025/600/400',
+    comments: [
+      {
+        id: 1,
+        user: {
+          name: 'Laura Díaz',
           avatar: 'https://randomuser.me/api/portraits/women/7.jpg',
         },
-        text: '¿La reunión será presencial?',
+        text: '¡Qué bella foto!',
       },
       {
         id: 2,
         user: {
-          name: 'Dirección Colegio San Martín',
-          avatar: 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png',
+          name: 'Mario Gómez',
+          avatar: 'https://randomuser.me/api/portraits/men/8.jpg',
         },
-        text: 'Sí, la reunión será presencial en el gimnasio.',
+        text: 'París es mágico 😍',
       },
     ],
-    likes: 15,
+    likes: 8,
     likedByUser: false,
   },
 ];
