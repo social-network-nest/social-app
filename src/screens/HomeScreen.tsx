@@ -737,6 +737,7 @@ export default function HomeScreen() {
   const [isMenuModalVisible, setIsMenuModalVisible] = useState(false);
   const [isSubjectPostsModalVisible, setIsSubjectPostsModalVisible] = useState(false);
   const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
+  const [isInstitutionalUser, setIsInstitutionalUser] = useState(false);
 
   // --- Funciones de lógica ---
   const handleCreatePost = () => {
@@ -872,9 +873,11 @@ export default function HomeScreen() {
         renderItem={renderPost}
         contentContainerStyle={styles.postsContainer}
       />
-      <TouchableOpacity onPress={() => setShowCreatePostModal(true)} style={styles.fab}>
-        <Ionicons name="add" size={30} color="white" />
-      </TouchableOpacity>
+      {isInstitutionalUser && (
+        <TouchableOpacity onPress={() => setShowCreatePostModal(true)} style={styles.fab}>
+          <Ionicons name="add" size={30} color="white" />
+        </TouchableOpacity>
+      )}
       <UserProfileModal
         visible={!!selectedUser}
         user={selectedUser}
