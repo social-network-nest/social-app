@@ -106,34 +106,34 @@ const MessageScreen: React.FC<{ navigation: any; route: any }> = ({ navigation, 
     <MessageBubble message={item.message} sender={item.sender} />
   );
 
-  return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#f4f6fa' }}>
-      <KeyboardAvoidingView
-        style={styles.container}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={90}
-      >
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-          <View style={styles.inner}>
-            <FlatList
-              ref={flatListRef}
-              data={messages}
-              renderItem={renderItem}
-              keyExtractor={item => item.id}
-              contentContainerStyle={styles.messageList}
-              showsVerticalScrollIndicator={false}
-            />
+return (
+  <SafeAreaView style={{ flex: 1,  backgroundColor: '#f4f6fa' }} edges={['bottom', 'left', 'right']}>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={90}
+    >
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <View style={styles.inner}>
+          <FlatList
+            ref={flatListRef}
+            data={messages}
+            renderItem={renderItem}
+            keyExtractor={item => item.id}
+            contentContainerStyle={styles.messageList}
+            showsVerticalScrollIndicator={false}
+          />
 
-            <MessageInput
-              value={message}
-              onChangeText={setMessage}
-              onSend={sendMessage}
-            />
-          </View>
-        </TouchableWithoutFeedback>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
-  );
+          <MessageInput
+            value={message}
+            onChangeText={setMessage}
+            onSend={sendMessage}
+          />
+        </View>
+      </TouchableWithoutFeedback>
+    </KeyboardAvoidingView>
+  </SafeAreaView>
+);
 };
 
 export default MessageScreen;
@@ -216,11 +216,13 @@ const styles = StyleSheet.create({
   },
   sendButton: {
     backgroundColor: '#007AFF',
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-    borderRadius: 16,
+    minWidth: 70,
+    height: 38,
+    borderRadius: 19,
     justifyContent: 'center',
     alignItems: 'center',
+    marginLeft: 4,
+    paddingHorizontal: 16,
     shadowColor: '#007AFF',
     shadowOpacity: 0.10,
     shadowRadius: 4,
@@ -229,7 +231,7 @@ const styles = StyleSheet.create({
   sendButtonText: {
     color: '#fff',
     fontWeight: 'bold',
-    fontSize: 16,
+    fontSize: 16, // Cambiado de 22 a 16 para mejor proporción
     letterSpacing: 0.2,
   },
   headerTitleContainer: {
