@@ -13,6 +13,7 @@ import {
   Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 
 interface Message {
   id: string;
@@ -81,6 +82,26 @@ const MessageScreen: React.FC<{ navigation: any; route: any }> = ({ navigation, 
   useLayoutEffect(() => {
     navigation.setOptions({
       headerTitle: () => <HeaderTitle avatar={avatar} user={user} />,
+      headerLeft: () => (
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={{ marginLeft: 8 }}
+        >
+          <View style={styles.arrowButtonContainerCustom}>
+            <Ionicons name="arrow-back" size={26} color="#007AFF" />
+          </View>
+        </TouchableOpacity>
+      ),
+      headerTitleAlign: 'center',
+      headerStyle: {
+        backgroundColor: '#fff',
+        borderBottomWidth: 1,
+        borderBottomColor: '#eee',
+        borderTopLeftRadius: 24,
+        borderTopRightRadius: 24,
+        elevation: 0,
+        shadowColor: 'transparent',
+      },
     });
   }, [navigation, user, avatar]);
 
@@ -237,14 +258,16 @@ const styles = StyleSheet.create({
   headerTitleContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: '#fff',
-    paddingVertical: 4,
-    paddingHorizontal: 10,
-    borderRadius: 16,
-    shadowColor: '#007AFF',
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 2,
+    paddingVertical: 10, // igual que modalHeaderCustom
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    elevation: 0,
+    shadowColor: 'transparent',
   },
   headerAvatar: {
     width: 36,
@@ -255,9 +278,16 @@ const styles = StyleSheet.create({
     borderColor: '#e3eaff',
   },
   headerUsername: {
-    fontSize: 17,
+    fontSize: 17, // igual que modalTitleCustom
     fontWeight: 'bold',
-    color: '#222',
+    color: '#222b45',
     letterSpacing: 0.2,
+  },
+  arrowButtonContainerCustom: {
+    backgroundColor: '#f4f6fb',
+    borderRadius: 20,
+    padding: 7,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

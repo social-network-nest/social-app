@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import React, { useRef, useState, useMemo } from 'react';
 import {
   View,
@@ -68,6 +69,19 @@ const CHATS: Chat[] = [
     avatar: 'https://randomuser.me/api/portraits/women/65.jpg',
     status: 'Disponible',
   },
+];
+
+type Message = {
+  id: string;
+  message: string;
+  sender: 'me' | 'other';
+};
+
+const dummyMessages: Message[] = [
+  { id: '1', message: '¡Hola!', sender: 'other' },
+  { id: '2', message: '¡Hola! ¿Cómo estás?', sender: 'me' },
+  { id: '3', message: 'Estoy bien, gracias. ¿Y tú?', sender: 'other' },
+  { id: '4', message: 'Muy bien, gracias por preguntar.', sender: 'me' },
 ];
 
 // --- COMPONENTES INTERNOS ---
@@ -216,11 +230,61 @@ const ContactsModal = ({
   </Modal>
 );
 
+const MessageModal = ({
+  visible,
+  onClose,
+  chat,
+  messages,
+}: {
+  visible: boolean;
+  onClose: () => void;
+  chat: Chat | null;
+  messages: { id: string; message: string; sender: 'me' | 'other' }[];
+}) => {
+  if (!chat) return null;
+  return (
+    <Modal visible={visible} animationType="slide" transparent>
+      <View style={styles.modalOverlay}>
+        <SafeAreaView style={styles.messageModalContainer}>
+          {/* Header similar a MessageScreen */}
+          <View style={styles.header}>
+            <TouchableOpacity onPress={onClose} style={styles.arrowButton}>
+              <Ionicons name="arrow-back" size={26} color="#007AFF" />
+            </TouchableOpacity>
+            <Image source={{ uri: chat.avatar }} style={styles.avatar} />
+            <Text style={styles.username} numberOfLines={1} ellipsizeMode="tail">
+              {chat.user}
+            </Text>
+          </View>
+          {/* Mensajes */}
+          <FlatList
+            data={messages}
+            keyExtractor={item => item.id}
+            renderItem={({ item }) => (
+              <View
+                style={[
+                  styles.messageBubble,
+                  item.sender === 'me' ? styles.myMessage : styles.otherMessage,
+                ]}
+              >
+                <Text style={styles.messageText}>{item.message}</Text>
+              </View>
+            )}
+            contentContainerStyle={{ padding: 16, paddingBottom: 10 }}
+          />
+        </SafeAreaView>
+      </View>
+    </Modal>
+  );
+};
+
 // --- COMPONENTE PRINCIPAL ---
 const ChatScreen = ({ navigation }: { navigation: any }) => {
   const [searchText, setSearchText] = useState('');
   const [isModalVisible, setModalVisible] = useState(false);
   const [searchContacto, setSearchContacto] = useState<string>('');
+  const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
+  const [isMessageModalVisible, setMessageModalVisible] = useState(false);
 
   const insets = useSafeAreaInsets();
 
@@ -295,14 +359,21 @@ const ChatScreen = ({ navigation }: { navigation: any }) => {
             swipeableRef={ref => {
               if (ref) swipeableRefs.current.set(item.id, ref);
             }}
-            onPress={() =>
-              navigation.navigate('Message', { user: item.user, avatar: item.avatar })
-            }
+            onPress={() => {
+              setSelectedChat(item);
+              setMessageModalVisible(true);
+            }}
             onDelete={() => confirmDelete(item.id, item.user)}
           />
         )}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         keyboardShouldPersistTaps="handled"
+      />
+      <MessageModal
+        visible={isMessageModalVisible}
+        onClose={() => setMessageModalVisible(false)}
+        chat={selectedChat}
+        messages={dummyMessages}
       />
       <ContactsModal
         visible={isModalVisible}
@@ -548,5 +619,76 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#666',
     marginTop: 2,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    elevation: 0,
+    shadowColor: 'transparent',
+  },
+  arrowButton: {
+    backgroundColor: '#f4f6fb',
+    borderRadius: 20,
+    padding: 7,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+  },
+  messageBubble: {
+    paddingVertical: 12,
+    paddingHorizontal: 18,
+    marginVertical: 6,
+    borderRadius: 18,
+    maxWidth: '75%',
+    alignSelf: 'flex-start',
+  },
+  myMessage: {
+    backgroundColor: '#e3eaff',
+    alignSelf: 'flex-end',
+  },
+  otherMessage: {
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#e3eaff',
+  },
+  messageText: {
+    fontSize: 16,
+    color: '#222',
+    fontWeight: '400',
+    letterSpacing: 0.1,
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
+  messageModalContainer: {
+    flex: 1,
+    backgroundColor: '#f4f6fa',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    overflow: 'hidden',
+    marginTop: 40,
+    marginHorizontal: 0,
+    paddingHorizontal: 0,
+    paddingBottom: 0,
+  },
+  fullScreenModalContainer: {
+    flex: 1,
+    backgroundColor: '#f4f6fa',
+    borderTopLeftRadius: 0,
+    borderTopRightRadius: 0,
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
+    marginTop: 0,
+    marginHorizontal: 0,
+    paddingHorizontal: 0,
+    paddingBottom: 0,
   },
 });
