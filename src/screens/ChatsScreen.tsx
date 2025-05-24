@@ -197,6 +197,7 @@ const ContactsModal = ({
         <TextInput
           style={styles.modalSearchInput}
           placeholder="Buscar contacto..."
+          placeholderTextColor="#9ba4b5"
           value={searchContacto}
           onChangeText={setSearchContacto}
         />
