@@ -11,6 +11,7 @@ import {
   Alert,
   Modal,
   ScrollView,
+  KeyboardAvoidingView, Platform
 } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -230,6 +231,9 @@ const ContactsModal = ({
   </Modal>
 );
 
+ // ...existing code...
+// ...otros imports...
+
 const MessageModal = ({
   visible,
   onClose,
@@ -241,18 +245,123 @@ const MessageModal = ({
   chat: Chat | null;
   messages: { id: string; message: string; sender: 'me' | 'other' }[];
 }) => {
+  const [input, setInput] = React.useState('');
+  const insets = useSafeAreaInsets();
+
   if (!chat) return null;
+
+  // Estilos exclusivos para el modal de mensajes
+  const modalStyles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: '#f4f6fa',
+      paddingTop: insets.top,
+      paddingBottom: insets.bottom,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: '#fff',
+      paddingVertical: 14,
+      paddingHorizontal: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: '#eee',
+    },
+    arrowButton: {
+      backgroundColor: '#f4f6fb',
+      borderRadius: 20,
+      padding: 7,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginRight: 10,
+    },
+    avatar: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      marginRight: 12,
+      borderWidth: 1.2,
+      borderColor: '#e3eaff',
+    },
+    username: {
+      fontWeight: 'bold',
+      fontSize: 16,
+      color: '#222',
+      maxWidth: '60%',
+    },
+    messageBubble: {
+      paddingVertical: 12,
+      paddingHorizontal: 18,
+      marginVertical: 6,
+      borderRadius: 18,
+      maxWidth: '75%',
+      alignSelf: 'flex-start',
+    },
+    myMessage: {
+      backgroundColor: '#e3eaff',
+      alignSelf: 'flex-end',
+    },
+    otherMessage: {
+      backgroundColor: '#fff',
+      borderWidth: 1,
+      borderColor: '#e3eaff',
+    },
+    messageText: {
+      fontSize: 16,
+      color: '#222',
+      fontWeight: '400',
+      letterSpacing: 0.1,
+    },
+    inputContainer: {
+      flexDirection: 'row',
+      padding: 12,
+      backgroundColor: '#fff',
+      borderTopWidth: 1,
+      borderTopColor: '#e3eaff',
+    },
+    input: {
+      flex: 1,
+      height: 42,
+      borderRadius: 20,
+      borderColor: '#e3eaff',
+      borderWidth: 1.5,
+      paddingHorizontal: 16,
+      fontSize: 16,
+      backgroundColor: '#f4f6fa',
+      color: '#222',
+    },
+    sendButton: {
+      marginLeft: 8,
+      backgroundColor: '#007AFF',
+      borderRadius: 20,
+      padding: 10,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+  });
+
   return (
-    <Modal visible={visible} animationType="slide" transparent>
-      <View style={styles.modalOverlay}>
-        <SafeAreaView style={styles.messageModalContainer}>
-          {/* Header similar a MessageScreen */}
-          <View style={styles.header}>
-            <TouchableOpacity onPress={onClose} style={styles.arrowButton}>
+    <Modal
+      visible={visible}
+      animationType="slide"
+      transparent={false}
+      presentationStyle="fullScreen"
+      statusBarTranslucent={true}
+      onRequestClose={onClose}
+    >
+      <SafeAreaView style={modalStyles.container}>
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          keyboardVerticalOffset={insets.top}
+        >
+          {/* Header */}
+          <View style={modalStyles.header}>
+            <TouchableOpacity onPress={onClose} style={modalStyles.arrowButton}>
               <Ionicons name="arrow-back" size={26} color="#007AFF" />
             </TouchableOpacity>
-            <Image source={{ uri: chat.avatar }} style={styles.avatar} />
-            <Text style={styles.username} numberOfLines={1} ellipsizeMode="tail">
+            <Image source={{ uri: chat.avatar }} style={modalStyles.avatar} />
+            <Text style={modalStyles.username} numberOfLines={1} ellipsizeMode="tail">
               {chat.user}
             </Text>
           </View>
@@ -263,20 +372,42 @@ const MessageModal = ({
             renderItem={({ item }) => (
               <View
                 style={[
-                  styles.messageBubble,
-                  item.sender === 'me' ? styles.myMessage : styles.otherMessage,
+                  modalStyles.messageBubble,
+                  item.sender === 'me' ? modalStyles.myMessage : modalStyles.otherMessage,
                 ]}
               >
-                <Text style={styles.messageText}>{item.message}</Text>
+                <Text style={modalStyles.messageText}>{item.message}</Text>
               </View>
             )}
             contentContainerStyle={{ padding: 16, paddingBottom: 10 }}
+            style={{ flex: 1 }}
+            keyboardShouldPersistTaps="handled"
           />
-        </SafeAreaView>
-      </View>
+          {/* Input para enviar mensaje */}
+          <View style={modalStyles.inputContainer}>
+            <TextInput
+              style={modalStyles.input}
+              placeholder="Escribe un mensaje..."
+              value={input}
+              onChangeText={setInput}
+              returnKeyType="send"
+              onSubmitEditing={() => setInput('')}
+            />
+            <TouchableOpacity
+              style={modalStyles.sendButton}
+              onPress={() => setInput('')}
+              disabled={!input.trim()}
+            >
+              <Ionicons name="send" size={22} color="#fff" />
+            </TouchableOpacity>
+          </View>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
     </Modal>
   );
 };
+
+// ...resto del código...
 
 // --- COMPONENTE PRINCIPAL ---
 const ChatScreen = ({ navigation }: { navigation: any }) => {
