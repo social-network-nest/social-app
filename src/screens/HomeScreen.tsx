@@ -345,7 +345,6 @@ const Sidebar = ({
             },
           ]}
         >
-          <Text style={styles.sidebarTitle}>Menú</Text>
           <TouchableOpacity onPress={() => handleMenuOptionPress('Mis Asignaturas')} style={styles.sidebarItem}>
             <Ionicons name="book-outline" size={22} color="#333" style={styles.sidebarIcon} />
             <Text style={styles.sidebarText}>Mis Asignaturas</Text>
@@ -365,6 +364,20 @@ const Sidebar = ({
           <TouchableOpacity onPress={() => handleMenuOptionPress('Calendarios')} style={styles.sidebarItem}>
             <Ionicons name="calendar-outline" size={22} color="#333" style={styles.sidebarIcon} />
             <Text style={styles.sidebarText}>Calendarios</Text>
+          </TouchableOpacity>
+          <View style={{ flex: 1 }} />
+          {/* Botón para ver perfil */}
+          <TouchableOpacity
+            style={styles.sidebarProfileButton}
+          >
+            <Ionicons name="person-circle-outline" size={22} color="#007AFF" style={{ marginRight: 10 }} />
+            <Text style={styles.sidebarProfileButtonText}>Ver mi perfil</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.sidebarLogoutButton}
+          >
+            <Ionicons name="log-out-outline" size={22} color="#e0245e" style={{ marginRight: 10 }} />
+            <Text style={styles.sidebarLogoutButtonText}>Cerrar sesión</Text>
           </TouchableOpacity>
         </Animated.View>
       </TouchableOpacity>
@@ -405,7 +418,6 @@ const MenuModal = ({
         {/* Mis Asignaturas */}
         {activeMenuOption === 'Mis Asignaturas' && (
           <View style={styles.card}>
-            <Text style={styles.sectionTitle}>Asignaturas Inscritas:</Text>
             {/* Matemáticas */}
             <View style={styles.noteContainer}>
               <TouchableOpacity onPress={() => openSubjectPostsModal('Matemáticas')}>
@@ -460,7 +472,6 @@ const MenuModal = ({
         {/* Notas */}
         {activeMenuOption === 'Notas' && (
           <View style={styles.card}>
-            <Text style={styles.sectionTitle}>Notas:</Text>
             {/* Matemáticas */}
             <View style={styles.noteContainer}>
               <Text style={styles.noteItem}>📘 <Text style={styles.subject}>Matemáticas:</Text></Text>
@@ -537,7 +548,6 @@ const MenuModal = ({
         {/* Calendarios */}
         {activeMenuOption === 'Calendarios' && (
           <View style={styles.card}>
-            <Text style={styles.sectionTitle}>Calendario Académico:</Text>
             <View style={styles.eventContainer}>
               <Text style={styles.subsectionTitle}>Eventos del Mes:</Text>
               <View style={styles.eventDetail}>
@@ -614,7 +624,6 @@ const MenuModal = ({
         {/* Anotaciones */}
         {activeMenuOption === 'Anotaciones' && (
           <View style={styles.card}>
-            <Text style={styles.sectionTitle}>📒 Anotaciones del Estudiante</Text>
             <View style={styles.eventContainer}>
               <Text style={[styles.subsectionTitle, { color: '#2e7d32' }]}>😊 Anotaciones Positivas</Text>
               <View style={styles.eventDetail}>
@@ -1135,7 +1144,6 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     marginRight: 8,
   },
-
   commentInputWithAvatar: {
     flex: 1,
     borderWidth: 1,
@@ -1160,41 +1168,48 @@ const styles = StyleSheet.create({
     elevation: 10,
   },
   sidebarTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
-    marginBottom: 20,
+    color: '#222b45',
+    marginBottom: 28,
+    textAlign: 'left',
   },
   sidebarItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 12,
+    paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: '#f0f0f0',
+    borderRadius: 12,
+    marginBottom: 2,
   },
   sidebarRight: {
     position: 'absolute',
     top: 0,
-    width: 250,
+    right: 0,
+    width: 270,
     height: '100%',
     backgroundColor: '#fff',
-    padding: 20,
+    paddingTop: 32,
+    paddingHorizontal: 24,
     shadowColor: '#000',
-    shadowOffset: { width: -2, height: 0 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 10,
+    shadowOffset: { width: -4, height: 0 },
+    shadowOpacity: 0.10,
+    shadowRadius: 10,
+    elevation: 12,
     zIndex: 100,
   },
   sidebarIcon: {
-    marginRight: 10,
+    marginRight: 14,
   },
   sidebarText: {
-    fontSize: 16,
-    color: '#333',
+    fontSize: 17,
+    color: '#222b45',
+    fontWeight: '500',
   },
   modalContent: {
     flex: 1,
-    backgroundColor: '#f7f7f7',
+    backgroundColor: '#fff', // Igual que el perfil
   },
   modalHeader: {
     flexDirection: 'row',
@@ -1223,137 +1238,147 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     padding: 20,
+    paddingBottom: 40,
+    backgroundColor: '#fff',
   },
   card: {
-    backgroundColor: '#fff',  // Fondo gris claro
-    borderRadius: 10,
-    padding: 15,
-    marginBottom: 15,
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 18,
+    borderWidth: 1,
+    borderColor: '#e6eaf0',
+    shadowColor: '#000',
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 1,
   },
   sectionTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 15,
+    color: '#222b45',
+    marginBottom: 14,
   },
   sectionItem: {
     fontSize: 16,
     marginVertical: 5,
   },
   noteContainer: {
-    marginBottom: 10,
+    marginBottom: 14,
+    backgroundColor: '#f7f9fc',
+    borderRadius: 12,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#f0f0f0',
   },
   noteItem: {
     fontSize: 16,
     fontWeight: 'bold',
     marginBottom: 5,
+    color: '#007AFF',
   },
   detailContainer: {
-    marginLeft: 20,
+    marginLeft: 18,
   },
   detail: {
     fontSize: 14,
     color: '#555',
-    marginBottom: 5,
+    marginBottom: 4,
   },
   average: {
     fontSize: 16,
     fontWeight: 'bold',
     color: '#007AFF',
-    marginTop: 20,
+    marginTop: 18,
   },
   subject: {
     fontWeight: 'bold',
     fontSize: 16,
-    color: '#007AFF', // color azul
+    color: '#007AFF',
   },
   attendanceContainer: {
-    backgroundColor: '#E8F6FF', // Fondo azul suave
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 20,
+    backgroundColor: '#f7f9fc', // Igual que cards en perfil
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 18,
     borderWidth: 1,
-    borderColor: '#A3D4FF', // Bordes azul claro
-    elevation: 3,
+    borderColor: '#f0f0f0',
   },
-
   attendanceDetail: {
-    fontSize: 16,
-    color: '#2C3E50', // Texto oscuro
-    marginBottom: 10,
+    fontSize: 15,
+    color: '#222b45',
+    marginBottom: 8,
   },
-
   attendanceValue: {
     fontWeight: 'bold',
-    color: '#007AFF', // Azul para resaltar los números
+    color: '#007AFF',
   },
-
   weeklyAttendance: {
-    marginTop: 10,
+    marginTop: 8,
   },
-
   weekContainer: {
-    backgroundColor: '#F0F8FF', // Fondo más claro para las semanas
-    borderRadius: 8,
-    padding: 10,
-    marginBottom: 15,
+    backgroundColor: '#f7f9fc',
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#f0f0f0',
   },
-
   weekTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#2C3E50',
-    marginBottom: 10,
-  },
-
-  weekDetail: {
     fontSize: 16,
+    fontWeight: 'bold',
+    color: '#222b45',
+    marginBottom: 8,
+  },
+  weekDetail: {
+    fontSize: 14,
     color: '#555',
-    marginBottom: 5,
+    marginBottom: 4,
   },
   eventContainer: {
-    marginBottom: 20,
-    paddingHorizontal: 15,
+    marginBottom: 16,
+    paddingHorizontal: 0,
   },
   subsectionTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 10,
+    color: '#222b45',
+    marginBottom: 8,
   },
   eventDetail: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: '#F1F8FF', // Fondo claro para cada evento
-    padding: 15,
+    backgroundColor: '#f7f9fc',
+    padding: 12,
     borderRadius: 10,
     marginBottom: 10,
-    elevation: 3,  // Sombra suave para darle profundidad
+    borderWidth: 1,
+    borderColor: '#f0f0f0',
   },
   eventIcon: {
-    fontSize: 24,
-    color: '#007AFF',  // Iconos azules para eventos importantes
+    fontSize: 22,
+    color: '#007AFF',
     marginRight: 10,
   },
   eventTextContainer: {
     flex: 1,
   },
   eventTitle: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: 'bold',
-    color: '#2C3E50',
-    marginBottom: 5,
+    color: '#222b45',
+    marginBottom: 4,
   },
   eventDate: {
-    fontSize: 14,
+    fontSize: 13,
     color: '#7F8C8D',
-    marginBottom: 5,
+    marginBottom: 4,
   },
   eventDescription: {
-    fontSize: 14,
+    fontSize: 13,
     color: '#34495E',
   },
-    publicationItem: {
+  publicationItem: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     marginBottom: 16,
@@ -1386,27 +1411,72 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: '#fff',
-    paddingVertical: 12,
-    paddingHorizontal: 18,
+    paddingVertical: 10, // Reducido para que el header sea menos alto
+    paddingHorizontal: 16, // Más compacto a los lados
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOpacity: 0.06,
-    shadowRadius: 2,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    elevation: 0,
+    shadowColor: 'transparent',
   },
   arrowButtonContainerCustom: {
-    backgroundColor: '#f2f6fa',
+    backgroundColor: '#f4f6fb',
     borderRadius: 20,
-    padding: 6,
+    padding: 7,
     alignItems: 'center',
     justifyContent: 'center',
   },
   modalTitleCustom: {
     flex: 1,
     textAlign: 'center',
-    fontSize: 20,
+    fontSize: 20, // Reducido para que el texto sea más pequeño
     fontWeight: 'bold',
-    color: '#222',
+    color: '#222b45',
+  },
+  sidebarProfileButton: {
+    backgroundColor: '#f7f9fc',
+    borderRadius: 20,
+    paddingVertical: 13,
+    paddingHorizontal: 18,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#e6eaf0',
+    marginTop: 28,
+    marginBottom: 8,
+    shadowColor: '#007AFF',
+    shadowOpacity: 0.04,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  sidebarProfileButtonText: {
+    color: '#007AFF',
+    fontWeight: 'bold',
+    fontSize: 16,
+    letterSpacing: 0.2,
+  },
+  sidebarLogoutButton: {
+    backgroundColor: '#fff0f0',
+    borderRadius: 20,
+    paddingVertical: 13,
+    paddingHorizontal: 18,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#ffd6d6',
+    marginBottom: 22,
+    shadowColor: '#e0245e',
+    shadowOpacity: 0.04,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  sidebarLogoutButtonText: {
+    color: '#e0245e',
+    fontWeight: 'bold',
+    fontSize: 16,
+    letterSpacing: 0.2,
   },
 });
